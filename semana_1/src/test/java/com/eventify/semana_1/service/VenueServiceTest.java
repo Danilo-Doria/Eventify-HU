@@ -9,9 +9,17 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.mockito.Mockito.when;
+import java.util.List;
 
-// Forma de crear test unitarios un poco mas "moderna"
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
+
+/*
+ * @ExtendWith(MockitoExtension.class)
+ * Esto le indica a Junit 5 que de be usar la extension de mockito
+ * Con esto Mockito incializa automaticamente los @Mocks
+ */
 @ExtendWith(MockitoExtension.class)
 public class VenueServiceTest {
 
@@ -29,6 +37,7 @@ public class VenueServiceTest {
     (Capacidad de un programa de manupular y examinar su propio codigo en tiempo de ejecucion)
      */
 
+    // @BeforeEach se ejecuta antes de cada test
     @BeforeEach
     void setUp() {
         // Se crea manualmente el service y se inyecta el repositorio falso
@@ -45,11 +54,80 @@ public class VenueServiceTest {
         );
 
         // Configurar el comportamiento del mock
-        // EL mock devolverá el mismo Venue
+        // EL mock devolverá el mismo Venue cuando el service llame a venueRepository.save(venue)
         when(venueRepository.save(venue)).thenReturn(venue);
 
         Venue result = venueService.create(venue);
 
-        // Assert, compruevea
+        // Assert, comprueaba que el service devuelva el venue esperado
+        assertEquals(venue, result);
+
+        // Verify, comprueba que el service realmente llamó al metodo save() del repository
+        verify(venueRepository).save(venue);
+    }
+
+    @Test
+    void shouldRejectVenueWhenNameIsEmpty() {
+        Venue venue = new Venue(
+                1L,
+                "",
+                "Mz B Lote 5, Barrio Mango Azul",
+                150
+        );
+
+        // Comprobando si venueService.create(event) lanza una IllegalArgumentException
+        // assertThrows tambien permite obtener la exception lanzada
+        assertThrows(
+                IllegalArgumentException.class, () -> venueService.create(venue)
+        );
+
+        // Comprobamos que no se guardó
+        verify(venueRepository, never()).save(venue);
+    }
+
+    @Test
+    void shouldRejectVenueWhenCapacityIsInvalid() {
+        Venue venue = new Venue(
+                1L,
+                "Plaza las Americas",
+                "Mz B Lote 5, Barrio Mango Azul",
+                -1
+        );
+
+        // Comprobando si venueService.create(event) lanza una IllegalArgumentException
+        assertThrows(
+                IllegalArgumentException.class, () -> venueService.create(venue)
+        );
+
+        // Comprobamos que no se guardó
+        verify(venueRepository, never()).save(venue);
+    }
+
+    @Test
+    void shouldReturnAllVenues() {
+        List<Venue> venues = List.of(
+                new Venue(
+                        1L,
+                        "Plaza las Americas",
+                        "Mz B Lote 5, Barrio Mango Azul",
+                        150
+                ), new Venue(
+                        2L,
+                        "Plaza Europea",
+                        "Mz B Lote 5, Barrio Mango Azul",
+                        150
+                ));
+
+        // Configurar el comportamiento del mock
+        // EL mock devolverá el listados de venues
+        when(venueRepository.findAll()).thenReturn(venues);
+
+        List<Venue> result = venueService.findAll();
+
+        // Assert, comprueaba que el service devuelva el listado de venues esperado
+        assertEquals(venues, result);
+
+        // Verify, comprueba que el servicio llamó al metodo findAll() del repository
+        verify(venueRepository).findAll();
     }
 }
