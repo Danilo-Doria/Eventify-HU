@@ -18,6 +18,11 @@ public class VenueService {
         if (venue.getNombre() == null || venue.getNombre().isBlank()) {
             throw new IllegalArgumentException("El nombre es obligatorio");
         }
+
+        if (venue.getCapacidad() <= 0) {
+            throw new IllegalArgumentException("La capacidad debe ser mayor a cero");
+        }
+
         return venueRepository.save(venue);
     }
 
