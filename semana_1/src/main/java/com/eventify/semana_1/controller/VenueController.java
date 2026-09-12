@@ -9,7 +9,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -43,7 +45,16 @@ public class VenueController {
     @PostMapping
     public ResponseEntity<Venue> create(@RequestBody Venue venue) {
         Venue createdVenue = venueService.create(venue);
-        return ResponseEntity.status(201).body(createdVenue);
+
+        // ServletUriComponentsBuilder toma la URL actual de la petición (ej. "http://localhost:8080/api/venues"),
+        // le añade el path "/{id}" y reemplaza el parámetro con el ID del nuevo objeto.
+        // Resultado de 'location': "http://localhost:8080/api/venues/1"
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(createdVenue.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(createdVenue);
     }
 
     @Operation(

@@ -7,7 +7,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -36,7 +38,16 @@ public class EventController {
     @PostMapping
     public ResponseEntity<Event> create(@RequestBody Event event) {
         Event createdEvent = eventService.create(event);
-        return ResponseEntity.status(201).body(createdEvent);
+
+        // ServletUriComponentsBuilder toma la URL actual de la petición (ej. "http://localhost:8080/api/events"),
+        // le añade el path "/{id}" y reemplaza el parámetro con el ID del nuevo objeto.
+        // Resultado de 'location': "http://localhost:8080/api/events/1"
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(createdEvent.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(createdEvent);
     }
 
     @Operation(
