@@ -5,7 +5,6 @@ import com.eventify.semana_2.repository.EventRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class EventService {

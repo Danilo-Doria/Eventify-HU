@@ -17,7 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/venues")
 public class VenueController {
-    private static final Logger log = LoggerFactory.getLogger(VenueController.class);
+
     private final VenueService venueService;
 
     public VenueController(VenueService venueService) {
