@@ -15,7 +15,7 @@ public class DataSeeder {
     /**
      * CommandLineRunner es una interfaz de Spring Boot utilizada para ejecutar
      * código en la fase final del arranque de la aplicación.
-     *
+
      * Se utiliza para tareas de inicialización (como poblar la base de datos)
      * asegurando que todos los componentes, repositorios y configuraciones
      * ya estén completamente instanciados y listos.
