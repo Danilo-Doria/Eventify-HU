@@ -9,6 +9,6 @@ import lombok.*;
 public class Venue {
     private long id;
     private String nombre;
-    private String dirección;
+    private String direccion;
     private int capacidad;
 }
