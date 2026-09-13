@@ -23,10 +23,20 @@ public class DataSeeder {
     @Bean
     public CommandLineRunner initData(EventRepository eventRepository, VenueRepository venueRepository) {
         return args -> {
-            Event event = new Event(1L, "Evento de prueba", LocalDateTime.of(2026, 10, 15, 19, 30), "Evento inicial");
+            Event event = Event.builder()
+                    .id(1L).nombre("Evento de prueba")
+                    .fecha(LocalDateTime.of(2026, 10, 15, 19, 30))
+                    .descripcion("Evento inicial")
+                    .build();
+
             eventRepository.save(event);
 
-            Venue venue = new Venue(1L, "Centro de Convenciones", "Calle 50 # 10-20", 500);
+            Venue venue = Venue.builder().id(1L)
+                    .nombre("Centro de Convenciones")
+                    .direccion("Calle 50 # 10-20")
+                    .capacidad(500)
+                    .build();
+
             venueRepository.save(venue);
         };
     }

@@ -37,12 +37,13 @@ public class EventServiceTest {
 
     @Test
     void shouldCreateEventWhenNameIsValid() {
-        Event event = new Event(
-                1L,
-                "Conferencia",
-                LocalDateTime.of(2026, 9, 8, 12, 30),
-                "Conferecia sobre Java"
-        );
+
+        Event event = Event.builder()
+                .id(1L)
+                .nombre("Conferencia")
+                .fecha(LocalDateTime.of(2026, 9, 8, 12, 30))
+                .descripcion("Conferecia sobre Java")
+                .build();
 
         // Cuando service guarde un evento el mock devolvera dicho evento
         when(eventRepository.save(event)).thenReturn(event);

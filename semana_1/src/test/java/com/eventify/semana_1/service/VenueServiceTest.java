@@ -45,12 +45,13 @@ public class VenueServiceTest {
 
     @Test
     void shouldCreateVenueWhenDataIsValid() {
-        Venue venue = new Venue(
-                1L,
-                "Plaza las Americas",
-                "Mz B Lote 5, Barrio Mango Azul",
-                150
-        );
+
+        Venue venue = Venue.builder()
+                .id(1L)
+                .nombre("Plaza las Americas")
+                .direccion("Mz B Lote 5, Barrio Mango Azul")
+                .capacidad(150)
+                .build();
 
         // Configurar el comportamiento del mock
         // EL mock devolverá el mismo Venue cuando el service llame a venueRepository.save(venue)

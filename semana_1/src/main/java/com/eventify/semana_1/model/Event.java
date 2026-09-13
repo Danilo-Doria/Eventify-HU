@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Event {
     private Long id;
     private String nombre;
