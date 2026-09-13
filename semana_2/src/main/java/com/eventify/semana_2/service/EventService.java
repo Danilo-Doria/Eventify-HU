@@ -24,7 +24,7 @@ public class EventService {
         return eventRepository.findAll();
     }
 
-    public Event findBtId(Long id) {
+    public Event findById(Long id) {
         return eventRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                                 "El evento con id: '" + id + "' no fue encontrado."
