@@ -1,21 +1,14 @@
 package com.eventify.semana_2.repository;
 
 import com.eventify.semana_2.model.Event;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Repository
-public class EventRepository {
-    private final List<Event> events = new ArrayList<>();
+public interface EventRepository extends JpaRepository<Event, Long> {
 
-    public Event save(Event event) {
-        events.add(event);
-        return event;
-    }
+    List<Event> findByNombreContainig(String nombre);
 
-    public List<Event> findAll() {
-        return events;
-    }
 }
