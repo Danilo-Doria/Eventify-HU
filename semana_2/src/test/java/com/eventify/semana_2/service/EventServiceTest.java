@@ -107,7 +107,7 @@ public class EventServiceTest {
         // devolverá nuestra página simulada.
         when(eventRepository.findAll(pageable)).thenReturn(eventPage);
 
-        // Ejecutamos el método del Service.
+        // Ejecutamos el metodo del Service.
         Page<Event> result = eventService.findAll(pageable);
 
         // Comprobamos que el Service devuelve la página esperada.
