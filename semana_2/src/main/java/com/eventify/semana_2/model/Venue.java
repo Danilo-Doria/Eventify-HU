@@ -15,7 +15,7 @@ public class Venue {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(nullable = false, length = 150)
     private String nombre;
@@ -24,5 +24,5 @@ public class Venue {
     private String direccion;
 
     @Column(nullable = false)
-    private int capacidad;
+    private Integer capacidad;
 }

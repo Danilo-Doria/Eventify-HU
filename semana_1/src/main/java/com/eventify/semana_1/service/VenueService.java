@@ -19,7 +19,7 @@ public class VenueService {
             throw new IllegalArgumentException("El nombre es obligatorio");
         }
 
-        if (venue.getCapacidad() <= 0) {
+        if (venue.getCapacidad() == null || venue.getCapacidad() <= 0) {
             throw new IllegalArgumentException("La capacidad debe ser mayor a cero");
         }
 

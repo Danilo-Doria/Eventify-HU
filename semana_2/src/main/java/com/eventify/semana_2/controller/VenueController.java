@@ -5,22 +5,23 @@ import com.eventify.semana_2.service.VenueService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/venues")
+@RequiredArgsConstructor
 public class VenueController {
 
     private final VenueService venueService;
-
-    public VenueController(VenueService venueService) {
-        this.venueService = venueService;
-    }
 
     @Operation(
             summary = "Registrar un lugar",
@@ -57,16 +58,87 @@ public class VenueController {
 
     @Operation(
             summary = "Consultar lugares",
-            description = "Obtiene todos los lugares registrados en el catálogo de Eventify"
+            description = "Obtiene los lugares registrados en el catálogo de Eventify mediante paginación y ordenamiento"
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Lista de lugares obtenida correctamente"
+                    description = "Lugares obtenidos correctamente"
             )
     })
     @GetMapping
-    public ResponseEntity<List<Venue>> findAll() {
-        return ResponseEntity.ok(venueService.findAll());
+    public ResponseEntity<Page<Venue>> findAll(
+            @PageableDefault(
+                    size = 10,
+                    sort = "nombre",
+                    direction = Sort.Direction.ASC
+            )
+            Pageable pageable) {
+
+        return ResponseEntity.ok(venueService.findAll(pageable));
+    }
+    ///////
+
+    @Operation(
+            summary = "Consultar un lugar por ID",
+            description = "Obtiene un lugar específico mediante su identificador"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Lugar encontrado correctamente"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "El lugar no existe"
+            )
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<Venue> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(venueService.findById(id));
+    }
+
+    @Operation(
+            summary = "Actualizar un lugar",
+            description = "Actualiza un lugar mediante su identificador"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Lugar actualizado correctamente"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "El nombre del lugar es obligatorio"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "El lugar no existe"
+            )
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<Venue> update(@PathVariable Long id, @RequestBody Venue venue) {
+        return ResponseEntity.ok(venueService.update(id, venue));
+    }
+
+
+    @Operation(
+            summary = "Eliminar un lugar",
+            description = "Elimina un lugar mediante su identificador"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "Lugar eliminado correctamente"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "El lugar no existe"
+            )
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        venueService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

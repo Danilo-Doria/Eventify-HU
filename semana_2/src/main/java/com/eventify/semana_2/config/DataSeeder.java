@@ -15,7 +15,7 @@ public class DataSeeder {
     /**
      * CommandLineRunner es una interfaz de Spring Boot utilizada para ejecutar
      * código en la fase final del arranque de la aplicación.
-
+     * <p>
      * Se utiliza para tareas de inicialización (como poblar la base de datos)
      * asegurando que todos los componentes, repositorios y configuraciones
      * ya estén completamente instanciados y listos.
@@ -23,21 +23,23 @@ public class DataSeeder {
     @Bean
     public CommandLineRunner initData(EventRepository eventRepository, VenueRepository venueRepository) {
         return args -> {
-            Event event = Event.builder()
-                    .id(1L).nombre("Evento de prueba")
-                    .fecha(LocalDateTime.of(2026, 10, 15, 19, 30))
-                    .descripcion("Evento inicial")
-                    .build();
+            if (eventRepository.count() == 0) {
+                Event event = Event.builder()
+                        .nombre("Evento de prueba")
+                        .fecha(LocalDateTime.of(2026, 10, 15, 19, 30))
+                        .descripcion("Evento inicial")
+                        .build();
+                eventRepository.save(event);
+            }
 
-            eventRepository.save(event);
-
-            Venue venue = Venue.builder().id(1L)
-                    .nombre("Centro de Convenciones")
-                    .direccion("Calle 50 # 10-20")
-                    .capacidad(500)
-                    .build();
-
-            venueRepository.save(venue);
+            if (venueRepository.count() == 0) {
+                Venue venue = Venue.builder()
+                        .nombre("Centro de Convenciones")
+                        .direccion("Calle 50 # 10-20")
+                        .capacidad(500)
+                        .build();
+                venueRepository.save(venue);
+            }
         };
     }
 }

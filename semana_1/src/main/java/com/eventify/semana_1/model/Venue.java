@@ -8,8 +8,8 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class Venue {
-    private long id;
+    private Long id;
     private String nombre;
     private String direccion;
-    private int capacidad;
+    private Integer capacidad;
 }
