@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -64,6 +65,7 @@ public class EventController {
     })
     @GetMapping
     public ResponseEntity<Page<Event>> findAll(
+            @ParameterObject
             @PageableDefault(
                     size = 10,
                     sort = "nombre",
@@ -74,7 +76,6 @@ public class EventController {
         return ResponseEntity.ok(eventService.findAll(pageable));
     }
 
-    ////
     @Operation(
             summary = "Consultar eventos por nombre",
             description = "Obtiene una lista de eventos cuyo nombre contiene el texto de búsqueda"
@@ -83,7 +84,7 @@ public class EventController {
             @ApiResponse(
                     responseCode = "200",
                     description = "Eventos obtenidos correctamente"
-            )
+            ),
     })
     @GetMapping("/search")
     public ResponseEntity<List<Event>> findByNombre(
@@ -139,7 +140,7 @@ public class EventController {
 
     @Operation(
             summary = "Eliminar un evento",
-            description = "Elimina un evento mediante su identificador"
+            description = "Elimina físicamente un evento mediante su identificador"
     )
     @ApiResponses({
             @ApiResponse(

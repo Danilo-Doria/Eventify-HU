@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -68,6 +69,7 @@ public class VenueController {
     })
     @GetMapping
     public ResponseEntity<Page<Venue>> findAll(
+            @ParameterObject
             @PageableDefault(
                     size = 10,
                     sort = "nombre",
@@ -77,7 +79,6 @@ public class VenueController {
 
         return ResponseEntity.ok(venueService.findAll(pageable));
     }
-    ///////
 
     @Operation(
             summary = "Consultar un lugar por ID",
@@ -121,10 +122,9 @@ public class VenueController {
         return ResponseEntity.ok(venueService.update(id, venue));
     }
 
-
     @Operation(
             summary = "Eliminar un lugar",
-            description = "Elimina un lugar mediante su identificador"
+            description = "Elimina un lugar físicamente mediante su identificador"
     )
     @ApiResponses({
             @ApiResponse(

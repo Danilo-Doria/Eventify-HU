@@ -137,7 +137,7 @@ public class VenueServiceTest {
         when(venueRepository.findAll(pageable)).thenReturn(venuePage);
 
         // Ejecutamos el metodo del Service.
-        Page<Venue> result = venueRepository.findAll(pageable);
+        Page<Venue> result = venueService.findAll(pageable);
 
         // Comprobamos que el Service devuelve la página esperada.
         assertEquals(venuePage, result);
