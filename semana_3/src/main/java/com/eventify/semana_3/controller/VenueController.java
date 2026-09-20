@@ -18,7 +18,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 
 @RestController
-@RequestMapping("/venues")
+@RequestMapping("/api/venues")
 @RequiredArgsConstructor
 public class VenueController {
 

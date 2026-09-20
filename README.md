@@ -249,6 +249,44 @@ Desde Swagger es posible visualizar y probar los diferentes endpoints disponible
 | `PUT`    | `/api/venues/{id}` | Actualizar un lugar       |
 | `DELETE` | `/api/venues/{id}` | Eliminar un lugar         |
 
+## 🖥️ Panel administrativo
+
+Eventify cuenta con una interfaz web administrativa desarrollada con **Spring MVC y Thymeleaf**, que permite gestionar visualmente los eventos y lugares registrados en el sistema.
+
+El panel utiliza controladores MVC independientes de los controladores REST de la API.
+
+### Funcionalidades
+
+* Visualizar eventos registrados.
+* Visualizar lugares registrados.
+* Mostrar mensajes informativos cuando no existen registros.
+* Acceder al formulario de creación de eventos.
+* Acceder al formulario de creación de lugares.
+* Registrar nuevos eventos desde la interfaz web.
+* Registrar nuevos lugares desde la interfaz web.
+* Redirigir al listado correspondiente después de crear un recurso.
+
+Las rutas administrativas utilizan el prefijo `/admin/**`, mientras que la API REST continúa utilizando `/api/**`.
+
+### Rutas principales
+
+| Método | Endpoint | Descripción |
+| ------ | -------- | ----------- |
+| `GET` | `/admin/events` | Listar eventos |
+| `GET` | `/admin/events/new` | Mostrar formulario de nuevo evento |
+| `POST` | `/admin/events` | Crear evento |
+| `GET` | `/admin/venues` | Listar lugares |
+| `GET` | `/admin/venues/new` | Mostrar formulario de nuevo lugar |
+| `POST` | `/admin/venues` | Crear lugar |
+
+## 🎨 Vistas con Thymeleaf
+
+Las vistas del panel administrativo se encuentran en:
+
+```text
+src/main/resources/templates/
+``
+
 ## 🧪 Pruebas
 
 El proyecto utiliza **JUnit** y las herramientas de testing de Spring Boot para verificar el correcto funcionamiento de sus componentes.
@@ -283,6 +321,8 @@ mvn test
 * **JUnit**
 * **Mockito**
 * **Spring Boot Test**
+* **Spring MVC**
+* **Thymeleaf**
 * **Springdoc OpenAPI / Swagger**
 
 ## 📦 Compilación
