@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eventos - Eventify</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans antialiased min-h-screen">
+
+<div class="max-w-6xl mx-auto px-4 py-8">
+
+    <!-- Encabezado del Panel -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between border-b border-gray-200 pb-6 mb-8">
+        <div>
+            <h1 class="text-3xl font-extrabold tracking-tight text-gray-900">Panel de Eventos</h1>
+            <p class="mt-2 text-sm text-gray-600">Administra, visualiza y controla todos los eventos programados en
+                Eventify.</p>
+        </div>
+        <div class="mt-4 md:mt-0">
+            <a th:href="@{/admin/venues}" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm
+            font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700
+            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors cursor-pointer">
+                Ver Lugares
+            </a>
+
+            <a th:href="@{/admin/events/new}" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm
+            font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700
+            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors cursor-pointer">
+                Crear Nuevo Evento
+            </a>
+        </div>
+    </div>
+
+    <!-- Contenedor con validación de Thymeleaf -->
+    <div class="bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden">
+
+        <!-- CASO CON INFORMACIÓN: Se renderiza la tabla si la lista 'events.content' NO está vacía -->
+        <div class="overflow-x-auto" th:unless="${events.isEmpty()}">
+            <table class="min-w-full divide-y divide-gray-200 text-left">
+                <thead class="bg-gray-50 text-xs font-semibold uppercase tracking-wider text-gray-600">
+                <tr>
+                    <th scope="col" class="px-6 py-4">ID</th>
+                    <th scope="col" class="px-6 py-4">Nombre del Evento</th>
+                    <th scope="col" class="px-6 py-4">Descripción</th>
+                    <th scope="col" class="px-6 py-4">Fecha</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 bg-white text-sm">
+                <!-- Recorre los eventos contenidos en la página actual -->
+                <tr th:each="event : ${events.content}" class="hover:bg-gray-50 transition-colors">
+                    <!-- ID -->
+                    <td class="whitespace-nowrap px-6 py-4 font-mono text-xs text-gray-400"
+                        th:text="${event.id}">
+                    </td>
+                    <!-- Nombre -->
+                    <td class="px-6 py-4 font-semibold text-gray-900"
+                        th:text="${event.nombre}">
+                    </td>
+                    <!-- Descripción -->
+                    <td class="px-6 py-4 text-gray-600 max-w-xs truncate"
+                        th:text="${event.descripcion}">
+                    </td>
+                    <!-- Fecha -->
+                    <td class="whitespace-nowrap px-6 py-4 text-gray-500"
+                        th:text="${#temporals.format(event.fecha, 'dd/MM/yyyy HH:mm')}">
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- CASO FALLBACK: Se muestra este mensaje si 'events.content' SÍ está vacía -->
+        <div class="p-12 text-center" th:if="${events.isEmpty()}">
+            <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 mb-4">
+                <!-- Icono de calendario o alerta -->
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
+                </svg>
+            </div>
+            <h3 class="text-sm font-semibold text-gray-900">No hay eventos disponibles</h3>
+            <p class="mt-1 text-sm text-gray-500">Por el momento no se han encontrado registros de eventos en la
+                plataforma.</p>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>
