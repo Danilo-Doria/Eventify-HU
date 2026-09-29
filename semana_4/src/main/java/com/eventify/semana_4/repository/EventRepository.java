@@ -23,14 +23,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     // Busca eventos cuya fecha esté dentro del rango indicado.
     List<Event> findByFechaBetween(LocalDateTime fechaInicio, LocalDateTime fechaFin);
 
-    // Obtiene todos los eventos ordenados desde la fecha más reciente hasta la más antigua.
-    List<Event> findAllByOrderByFechaDesc();
-
     // Obtiene eventos paginados sin calcular el total de registros.
     Slice<Event> findAllByOrderByFechaDesc(Pageable pageable);
-
-    // Busca eventos por ciudad y los ordena desde la fecha más reciente.
-    Slice<Event> findByVenueCiudadContainingIgnoreCaseOrderByFechaDesc(String ciudad, Pageable pageable);
 
     // Busca eventos asociados a una categoría por su nombre.
     @Query("""
@@ -55,7 +49,10 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     Slice<Event> findAllWithVenue(Pageable pageable);
 
     // Busca eventos cuyo Venue tenga una capacidad igual o superior a la indicada.
-    Slice<Event> findByVenueCapacidadGreaterThanEqualOrderByFechaDesc( Integer capacidad, Pageable pageable );
+    Slice<Event> findByVenueCapacidadGreaterThanEqualOrderByFechaDesc(
+            Integer capacidad,
+            Pageable pageable
+    );
 
     // Devuelve un resumen paginado de eventos, consultando solo los campos necesarios.
     @Query("""
@@ -69,4 +66,41 @@ public interface EventRepository extends JpaRepository<Event, Long> {
         JOIN e.venue v
         """)
     Slice<EventSummaryDTO> findEventSummaries(Pageable pageable);
+
+    // Busca eventos aplicando opcionalmente ciudad, categoría, capacidad y rango de fechas.
+    // Al devolver un DTO y un Slice, evita cargar entidades completas y evita calcular el total.
+    @Query("""
+            SELECT DISTINCT new com.eventify.semana_4.dto.EventSummaryDTO(
+                e.nombre,
+                e.fecha,
+                v.nombre,
+                v.ciudad
+            )
+            FROM Event e
+            JOIN e.venue v
+            LEFT JOIN e.categories c
+            WHERE
+                (:ciudad IS NULL OR
+                    LOWER(v.ciudad) LIKE LOWER(CONCAT('%', :ciudad, '%')))
+            AND
+                (:categoria IS NULL OR
+                    LOWER(c.nombre) LIKE LOWER(CONCAT('%', :categoria, '%')))
+            AND
+                (:capacidad IS NULL OR
+                    v.capacidad >= :capacidad)
+            AND
+                (:fechaInicio IS NULL OR
+                    e.fecha >= :fechaInicio)
+            AND
+                (:fechaFin IS NULL OR
+                    e.fecha <= :fechaFin)
+            """)
+    Slice<EventSummaryDTO> findEventSummariesWithFilters(
+            @Param("ciudad") String ciudad,
+            @Param("categoria") String categoria,
+            @Param("capacidad") Integer capacidad,
+            @Param("fechaInicio") LocalDateTime fechaInicio,
+            @Param("fechaFin") LocalDateTime fechaFin,
+            Pageable pageable
+    );
 }

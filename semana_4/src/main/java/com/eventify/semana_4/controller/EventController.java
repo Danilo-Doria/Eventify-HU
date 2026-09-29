@@ -62,8 +62,12 @@ public class EventController {
     }
 
     @Operation(
-            summary = "Consultar eventos",
-            description = "Obtiene los eventos activos ordenados desde la fecha más reciente, utilizando paginación mediante Slice"
+            summary = "Consultar eventos activos",
+            description = """
+                    Obtiene los eventos activos del catálogo.
+                    Los resultados se ordenan por fecha de forma descendente y utilizan
+                    paginación mediante Slice, evitando calcular el total de registros.
+                    """
     )
     @ApiResponses({
             @ApiResponse(
@@ -81,28 +85,29 @@ public class EventController {
             )
             Pageable pageable) {
 
-        return ResponseEntity.ok(
-                eventService.findAllByFechaDesc(pageable)
-        );
+        return ResponseEntity.ok(eventService.findAllByFechaDesc(pageable));
     }
 
     @Operation(
             summary = "Consultar eventos por nombre",
-            description = "Obtiene una lista de eventos cuyo nombre contiene el texto de búsqueda"
+            description = "Obtiene eventos cuyo nombre contiene el texto indicado, ignorando mayúsculas y minúsculas."
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Eventos obtenidos correctamente"
-            ),
+                    description = "Eventos encontrados correctamente"
+            )
     })
     @GetMapping("/search")
     public ResponseEntity<List<Event>> findByNombre(
+
+            @Parameter(
+                    description = "Texto parcial del nombre del evento",
+                    example = "concierto"
+            )
             @RequestParam String nombre) {
 
-        return ResponseEntity.ok(
-                eventService.findByNombreContaining(nombre)
-        );
+        return ResponseEntity.ok(eventService.findByNombreContaining(nombre));
     }
 
     @Operation(

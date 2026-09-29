@@ -24,6 +24,7 @@ public class VenueRepositoryTest {
                 .nombre("Plaza las Americas")
                 .direccion("Mz B Lote 5, Barrio Mango Azul")
                 .capacidad(150)
+                .ciudad("Bogotá")
                 .build();
 
         Venue savedVenue = venueRepository.save(venue);
@@ -41,6 +42,7 @@ public class VenueRepositoryTest {
                 .nombre("Plaza las Americas")
                 .direccion("Mz B Lote 5, Barrio Mango Azul")
                 .capacidad(150)
+                .ciudad("Bogotá")
                 .build();
 
         Venue savedVenue = venueRepository.save(venue);
@@ -70,6 +72,7 @@ public class VenueRepositoryTest {
                     .nombre("Venue " + i)
                     .direccion("Dirección " + i)
                     .capacidad(100 + i)
+                    .ciudad("Bogotá")
                     .build();
 
             venueRepository.save(venue);
@@ -81,8 +84,8 @@ public class VenueRepositoryTest {
                 venueRepository.findAll(pageable);
 
         assertEquals(5, result.getContent().size());
-        assertEquals(10, result.getTotalElements());
-        assertEquals(2, result.getTotalPages());
+        assertEquals(30, result.getTotalElements());
+        assertEquals(6, result.getTotalPages());
         assertEquals(0, result.getNumber());
         assertEquals(5, result.getSize());
     }

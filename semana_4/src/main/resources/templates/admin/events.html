@@ -32,6 +32,127 @@
         </div>
     </div>
 
+    <!-- Formulario de filtros del catálogo -->
+    <div class="bg-white shadow-sm border border-gray-200 rounded-xl p-6 mb-8">
+
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">
+            Buscar eventos
+        </h2>
+
+        <!-- Envía los filtros mediante parámetros GET para conservarlos en la URL -->
+        <form th:action="@{/admin/events}" method="get"
+              class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+            <!-- Filtro por ciudad -->
+            <div>
+                <label for="ciudad" class="block text-sm font-medium text-gray-700 mb-1">
+                    Ciudad
+                </label>
+
+                <input
+                        type="text"
+                        id="ciudad"
+                        name="ciudad"
+                        th:value="${ciudad}"
+                        placeholder="Ej. Bogotá"
+                        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm
+                        focus:border-indigo-500 focus:ring-indigo-500"
+                >
+            </div>
+
+            <!-- Filtro por categoría -->
+            <div>
+                <label for="categoria" class="block text-sm font-medium text-gray-700 mb-1">
+                    Categoría
+                </label>
+
+                <input
+                        type="text"
+                        id="categoria"
+                        name="categoria"
+                        th:value="${categoria}"
+                        placeholder="Ej. Rock"
+                        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm
+                        focus:border-indigo-500 focus:ring-indigo-500"
+                >
+            </div>
+
+            <!-- Filtro por capacidad mínima -->
+            <div>
+                <label for="capacidad" class="block text-sm font-medium text-gray-700 mb-1">
+                    Capacidad mínima
+                </label>
+
+                <input
+                        type="number"
+                        id="capacidad"
+                        name="capacidad"
+                        th:value="${capacidad}"
+                        min="1"
+                        placeholder="Ej. 5000"
+                        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm
+                        focus:border-indigo-500 focus:ring-indigo-500"
+                >
+            </div>
+
+            <!-- Filtro por fecha inicial -->
+            <div>
+                <label for="fechaInicio" class="block text-sm font-medium text-gray-700 mb-1">
+                    Fecha desde
+                </label>
+
+                <input
+                        type="datetime-local"
+                        id="fechaInicio"
+                        name="fechaInicio"
+                        th:value="${fechaInicio != null ? #temporals.format(fechaInicio, 'yyyy-MM-dd''T''HH:mm') : ''}"
+                        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm
+                        focus:border-indigo-500 focus:ring-indigo-500"
+                >
+            </div>
+
+            <!-- Filtro por fecha final -->
+            <div>
+                <label for="fechaFin" class="block text-sm font-medium text-gray-700 mb-1">
+                    Fecha hasta
+                </label>
+
+                <input
+                        type="datetime-local"
+                        id="fechaFin"
+                        name="fechaFin"
+                        th:value="${fechaFin != null ? #temporals.format(fechaFin, 'yyyy-MM-dd''T''HH:mm') : ''}"
+                        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm
+                        focus:border-indigo-500 focus:ring-indigo-500"
+                >
+            </div>
+
+            <!-- Botones del formulario -->
+            <div class="flex items-end gap-2">
+
+                <!-- Aplica los filtros y vuelve a la primera página -->
+                <button
+                        type="submit"
+                        class="inline-flex items-center justify-center px-4 py-2 border border-transparent
+                        text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600
+                        hover:bg-indigo-700 transition-colors cursor-pointer">
+                    Buscar
+                </button>
+
+                <!-- Limpia todos los filtros -->
+                <a
+                        th:href="@{/admin/events}"
+                        class="inline-flex items-center justify-center px-4 py-2 border border-gray-300
+                        text-sm font-medium rounded-md text-gray-700 bg-white
+                        hover:bg-gray-50 transition-colors">
+                    Limpiar
+                </a>
+
+            </div>
+
+        </form>
+    </div>
+
     <!-- Contenedor con validación de Thymeleaf -->
     <div class="bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden">
 
@@ -102,7 +223,15 @@
             <!-- Botón Anterior -->
             <a
                     th:if="${events.hasPrevious()}"
-                    th:href="@{/admin/events(page=${events.number - 1}, size=${events.size})}"
+                    th:href="@{/admin/events(
+                        page=${events.number - 1},
+                        size=${events.size},
+                        ciudad=${ciudad},
+                        categoria=${categoria},
+                        capacidad=${capacidad},
+                        fechaInicio=${fechaInicio != null ? #temporals.format(fechaInicio, 'yyyy-MM-dd''T''HH:mm') : null},
+                        fechaFin=${fechaFin != null ? #temporals.format(fechaFin, 'yyyy-MM-dd''T''HH:mm') : null}
+                    )}"
                     class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium
                     rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
                 Anterior
@@ -124,7 +253,15 @@
             <!-- Botón Siguiente -->
             <a
                     th:if="${events.hasNext()}"
-                    th:href="@{/admin/events(page=${events.number + 1}, size=${events.size})}"
+                    th:href="@{/admin/events(
+                        page=${events.number + 1},
+                        size=${events.size},
+                        ciudad=${ciudad},
+                        categoria=${categoria},
+                        capacidad=${capacidad},
+                        fechaInicio=${fechaInicio != null ? #temporals.format(fechaInicio, 'yyyy-MM-dd''T''HH:mm') : null},
+                        fechaFin=${fechaFin != null ? #temporals.format(fechaFin, 'yyyy-MM-dd''T''HH:mm') : null}
+                    )}"
                     class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium
                     rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
                 Siguiente

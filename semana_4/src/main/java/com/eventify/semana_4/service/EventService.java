@@ -193,7 +193,36 @@ public class EventService {
                     ));
             resolvedCategories.add(existingCategory);
         }
-
         return resolvedCategories;
+    }
+
+    // Busca resúmenes de eventos aplicando los filtros opcionales del catálogo administrativo.
+    @Transactional(readOnly = true)
+    public Slice<EventSummaryDTO> findEventSummariesWithFilters(
+            String ciudad,
+            String categoria,
+            Integer capacidad,
+            LocalDateTime fechaInicio,
+            LocalDateTime fechaFin,
+            Pageable pageable) {
+
+        // Convierte los textos vacíos en null para que no se apliquen como filtros.
+        ciudad = normalizeFilter(ciudad);
+        categoria = normalizeFilter(categoria);
+
+        // Ejecuta la consulta optimizada del repositorio con los filtros recibidos.
+        return eventRepository.findEventSummariesWithFilters(
+                ciudad,
+                categoria,
+                capacidad,
+                fechaInicio,
+                fechaFin,
+                pageable
+        );
+    }
+
+    // Convierte cadenas vacías o con solo espacios en null.
+    private String normalizeFilter(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 }

@@ -161,7 +161,7 @@ public class EventRepositoryTest {
                         .build()
         );
 
-        // Guardamos 10 eventos en la base de datos de prueba.
+        // Agregamos 50 eventos adicionales a los datos iniciales de Flyway.
         for (int i = 0; i < 50; i++) {
 
             Event event = Event.builder()
@@ -183,11 +183,11 @@ public class EventRepositoryTest {
         // La página debe contener exactamente 5 eventos.
         assertEquals(5, result.getContent().size());
 
-        // En total existen 10 eventos.
-        assertEquals(50, result.getTotalElements());
+        // Flyway aporta 200 eventos y este test agrega 50.
+        assertEquals(250, result.getTotalElements());
 
-        // 50 eventos / 5 por página = 2 páginas.
-        assertEquals(10, result.getTotalPages());
+        // 250 eventos / 5 por página = 50 páginas.
+        assertEquals(50, result.getTotalPages());
 
         // Estamos en la primera página.
         assertEquals(0, result.getNumber());

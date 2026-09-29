@@ -1,16 +1,16 @@
 package com.eventify.semana_4.controller;
 
+import com.eventify.semana_4.dto.EventSummaryDTO;
 import com.eventify.semana_4.model.Event;
 import com.eventify.semana_4.model.Venue;
+import com.eventify.semana_4.service.CategoryService;
 import com.eventify.semana_4.service.EventService;
 import com.eventify.semana_4.service.VenueService;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -48,24 +48,33 @@ public class AdminControllerTest {
     @MockitoBean
     private VenueService venueService;
 
+    @MockitoBean
+    private CategoryService categoryService;
+
     @Test
     void shouldReturnEventsPageWithCorrectData() throws Exception {
-        // 1. ARRANGEMENT (Preparación)
-        Event event = Event.builder()
-                .id(1L)
-                .nombre("Concierto de Rock")
-                .descripcion("Evento musical")
-                .fecha(LocalDateTime.of(2026, 10, 15, 20, 0))
-                .build();
+        // Datos que simularán el resumen de un evento.
+        EventSummaryDTO event = new EventSummaryDTO(
+                "Concierto de Rock",
+                LocalDateTime.of(2026, 10, 15, 20, 0),
+                "Centro de Convenciones", "Bogotá");
+        // Slice que simulará la respuesta del servicio.
+        Slice<EventSummaryDTO> slice = new SliceImpl<>(List.of(event));
+        // Simula la consulta optimizada del catálogo administrativo.
+        when(eventService.findEventSummariesWithFilters(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(Pageable.class)
+        )).thenReturn(slice);
 
-        Page<Event> page = new PageImpl<>(List.of(event));
-        when(eventService.findAll(any(Pageable.class))).thenReturn(page);
-
-        // 2. ACT & ASSERT (Acción y Verificación combinada)
+        // Simula GET /admin/events.
         mockMvc.perform(get("/admin/events"))
-                .andExpect(status().isOk()) // Valida HTTP 200
-                .andExpect(view().name("admin/events")) // Valida la vista HTML
-                .andExpect(model().attribute("events", page)); // Valida que el Model contiene los datos esperados
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/events"))
+                .andExpect(model().attribute("events", slice));
     }
 
     @Test
