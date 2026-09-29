@@ -1,5 +1,6 @@
 package com.eventify.semana_4.repository;
 
+import com.eventify.semana_4.dto.EventSummaryDTO;
 import com.eventify.semana_4.model.Event;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Pageable;
@@ -53,4 +54,17 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
     // Busca eventos cuyo Venue tenga una capacidad igual o superior a la indicada.
     Slice<Event> findByVenueCapacidadGreaterThanEqualOrderByFechaDesc( Integer capacidad, Pageable pageable );
+
+    // Devuelve un resumen paginado de eventos, consultando solo los campos necesarios.
+    @Query("""
+        SELECT new com.eventify.semana_4.dto.EventSummaryDTO(
+            e.nombre,
+            e.fecha,
+            v.nombre,
+            v.ciudad
+        )
+        FROM Event e
+        JOIN e.venue v
+        """)
+    Slice<EventSummaryDTO> findEventSummaries(Pageable pageable);
 }

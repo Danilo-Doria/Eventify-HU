@@ -1,21 +1,26 @@
 package com.eventify.semana_4.controller;
 
+import com.eventify.semana_4.dto.EventSummaryDTO;
+import com.eventify.semana_4.model.Category;
 import com.eventify.semana_4.model.Event;
 import com.eventify.semana_4.model.Venue;
+import com.eventify.semana_4.service.CategoryService;
 import com.eventify.semana_4.service.EventService;
 import com.eventify.semana_4.service.VenueService;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Controller // Esta clase manejará solicitudes HTTP relacionadas con páginas web
 @RequestMapping("/admin")
@@ -24,6 +29,7 @@ public class AdminController {
 
     private final EventService eventService;
     private final VenueService venueService;
+    private final CategoryService categoryService;
 
     // Model es el objeto que Spring nos proporciona para transportar información desde el Controller hacia la vista
     @GetMapping("/events")
@@ -37,10 +43,10 @@ public class AdminController {
             Pageable pageable,
             Model model) {
 
-        // Obtiene los eventos paginados desde la base de datos.
-        Page<Event> events = eventService.findAll(pageable);
+        // Obtiene los eventos mediante una proyección optimizada y paginada con Slice.
+        Slice<EventSummaryDTO> events = eventService.findEventSummaries(pageable);
 
-        // Envía la página de eventos a la vista.
+        // Envía el resumen paginado de eventos a la vista.
         model.addAttribute("events", events);
 
         // Renderiza templates/admin/events.html.
@@ -49,25 +55,44 @@ public class AdminController {
 
     @GetMapping("/events/new")
     public String newEvent(Model model) {
-
-        // Crea un objeto Event vacío para enlazarlo con el formulario.
         model.addAttribute("event", new Event());
+        model.addAttribute("venues", venueService.findAll());
+        model.addAttribute("categories", categoryService.findAll());
 
-        // Renderiza templates/admin/event-form.html.
         return "admin/event-form";
     }
 
     @PostMapping("/events")
-        // @ModelAttribute Vincula los datos enviados desde el formulario HTML (th:object="${event}") a este objeto Java
-        public String createEvent(@ModelAttribute Event event) {
+    // @ModelAttribute Vincula los datos enviados desde el formulario HTML (th:object="${event}") a este objeto Java
+    public String createEvent(
+            @ModelAttribute Event event,
+            @RequestParam(required = false) List<Long> categoryIds) {
 
-        // Envía el evento recibido al servicio para validarlo y guardarlo.
+        // Crea un conjunto vacío de categorías para el evento.
+        Set<Category> categories = new HashSet<>();
+
+        // Si el formulario recibió categorías, crea referencias usando sus IDs.
+        if (categoryIds != null) {
+            for (Long categoryId : categoryIds) {
+
+                // Crea una Category únicamente con su ID para que el Service la resuelva en la base de datos.
+                Category category = Category.builder()
+                        .id(categoryId)
+                        .build();
+
+                categories.add(category);
+            }
+        }
+
+        // Asocia las categorías recibidas al evento antes de enviarlo al Service.
+        event.setCategories(categories);
+
+        // Envía el evento al servicio para validarlo y guardarlo junto con sus relaciones.
         eventService.create(event);
 
         // Redirige al listado después de guardar correctamente.
         return "redirect:/admin/events";
     }
-
 
     @GetMapping("/venues")
     public String venues(

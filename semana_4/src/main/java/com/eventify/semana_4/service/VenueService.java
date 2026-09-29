@@ -7,6 +7,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +42,11 @@ public class VenueService {
                                 "El lugar con id: '" + id + "' no fue encontrado."
                         )
                 );
+    }
+
+    @Transactional(readOnly = true)
+    public List<Venue> findAll() {
+        return venueRepository.findAll();
     }
 
     public Venue update(Long id, Venue venue) {

@@ -40,31 +40,38 @@
             <table class="min-w-full divide-y divide-gray-200 text-left">
                 <thead class="bg-gray-50 text-xs font-semibold uppercase tracking-wider text-gray-600">
                 <tr>
-                    <th scope="col" class="px-6 py-4">ID</th>
                     <th scope="col" class="px-6 py-4">Nombre del Evento</th>
-                    <th scope="col" class="px-6 py-4">Descripción</th>
                     <th scope="col" class="px-6 py-4">Fecha</th>
+                    <th scope="col" class="px-6 py-4">Lugar</th>
+                    <th scope="col" class="px-6 py-4">Ciudad</th>
                 </tr>
                 </thead>
+
                 <tbody class="divide-y divide-gray-200 bg-white text-sm">
+
                 <!-- Recorre los eventos contenidos en la página actual -->
                 <tr th:each="event : ${events.content}" class="hover:bg-gray-50 transition-colors">
-                    <!-- ID -->
-                    <td class="whitespace-nowrap px-6 py-4 font-mono text-xs text-gray-400"
-                        th:text="${event.id}">
-                    </td>
+
                     <!-- Nombre -->
                     <td class="px-6 py-4 font-semibold text-gray-900"
                         th:text="${event.nombre}">
                     </td>
-                    <!-- Descripción -->
-                    <td class="px-6 py-4 text-gray-600 max-w-xs truncate"
-                        th:text="${event.descripcion}">
-                    </td>
+
                     <!-- Fecha -->
                     <td class="whitespace-nowrap px-6 py-4 text-gray-500"
                         th:text="${#temporals.format(event.fecha, 'dd/MM/yyyy HH:mm')}">
                     </td>
+
+                    <!-- Nombre del Venue -->
+                    <td class="px-6 py-4 text-gray-600"
+                        th:text="${event.venueNombre}">
+                    </td>
+
+                    <!-- Ciudad -->
+                    <td class="px-6 py-4 text-gray-600"
+                        th:text="${event.ciudad}">
+                    </td>
+
                 </tr>
                 </tbody>
             </table>
@@ -79,9 +86,58 @@
                           d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
                 </svg>
             </div>
+
             <h3 class="text-sm font-semibold text-gray-900">No hay eventos disponibles</h3>
-            <p class="mt-1 text-sm text-gray-500">Por el momento no se han encontrado registros de eventos en la
-                plataforma.</p>
+
+            <p class="mt-1 text-sm text-gray-500">
+                Por el momento no se han encontrado registros de eventos en la plataforma.
+            </p>
+        </div>
+
+        <!-- Navegación de paginación -->
+        <div
+                th:unless="${events.isEmpty()}"
+                class="flex items-center justify-between border-t border-gray-200 px-6 py-4">
+
+            <!-- Botón Anterior -->
+            <a
+                    th:if="${events.hasPrevious()}"
+                    th:href="@{/admin/events(page=${events.number - 1}, size=${events.size})}"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium
+                    rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                Anterior
+            </a>
+
+            <!-- Espacio cuando no existe página anterior -->
+            <span
+                    th:unless="${events.hasPrevious()}"
+                    class="inline-flex items-center px-4 py-2 border border-gray-200 text-sm font-medium
+                    rounded-md text-gray-400 bg-gray-50 cursor-not-allowed">
+                Anterior
+            </span>
+
+            <!-- Información de la página actual -->
+            <span class="text-sm text-gray-500">
+                Página <span th:text="${events.number + 1}"></span>
+            </span>
+
+            <!-- Botón Siguiente -->
+            <a
+                    th:if="${events.hasNext()}"
+                    th:href="@{/admin/events(page=${events.number + 1}, size=${events.size})}"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium
+                    rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                Siguiente
+            </a>
+
+            <!-- Espacio cuando no existe página siguiente -->
+            <span
+                    th:unless="${events.hasNext()}"
+                    class="inline-flex items-center px-4 py-2 border border-gray-200 text-sm font-medium
+                    rounded-md text-gray-400 bg-gray-50 cursor-not-allowed">
+                Siguiente
+            </span>
+
         </div>
 
     </div>

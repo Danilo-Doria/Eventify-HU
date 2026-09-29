@@ -32,7 +32,7 @@
 
         <!-- th:action -> Indica a qué URL se enviará el formulario -->
         <!-- th:object -> Indica que este formulario está vinculado al objeto event que enviamos desde el Controller -->
-        <!-- th:field -> Significa que este input está vinculado al atributo: -->
+        <!-- th:field -> Vincula cada campo del formulario con un atributo del objeto Event -->
         <form th:action="@{/admin/events}" th:object="${event}" method="post" class="space-y-6">
 
             <!-- Campo: Nombre -->
@@ -74,6 +74,67 @@
                         shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none text-sm transition-colors"
                         required
                 >
+            </div>
+
+            <!-- Campo: Venue -->
+            <div>
+                <label for="venue" class="block text-sm font-semibold text-gray-700 mb-2">Lugar del Evento</label>
+
+                <!--
+                    th:field="*{venue.id}" -> Vincula la selección con el ID del Venue asociado al Event.
+                    th:each -> Recorre todos los Venues enviados por el Controller.
+                    th:value -> Envía el ID del Venue seleccionado.
+                    th:text -> Muestra el nombre del Venue en el formulario.
+                -->
+                <select
+                        id="venue"
+                        th:field="*{venue.id}"
+                        class="block w-full rounded-md border border-gray-300 px-4 py-2.5 text-gray-900
+                        shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none text-sm transition-colors"
+                        required
+                >
+                    <option value="">Selecciona un lugar</option>
+
+                    <option
+                            th:each="venue : ${venues}"
+                            th:value="${venue.id}"
+                            th:text="${venue.nombre + ' - ' + venue.ciudad}">
+                    </option>
+                </select>
+            </div>
+
+            <!-- Campo: Categorías -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-3">Categorías</label>
+
+                <!--
+                    th:each -> Recorre todas las categorías enviadas por el Controller.
+                    th:value -> Envía el ID de la categoría seleccionada.
+                    name="categoryIds" -> Agrupa los IDs de las categorías seleccionadas.
+                -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+                    <label
+                            th:each="category : ${categories}"
+                            class="flex items-center gap-3 p-3 border border-gray-200 rounded-md
+                            hover:bg-gray-50 cursor-pointer transition-colors">
+
+                        <input
+                                type="checkbox"
+                                name="categoryIds"
+                                th:value="${category.id}"
+                                class="h-4 w-4 rounded border-gray-300 text-indigo-600
+                                focus:ring-indigo-500"
+                        >
+
+                        <span
+                                th:text="${category.nombre}"
+                                class="text-sm text-gray-700">
+                        </span>
+
+                    </label>
+
+                </div>
             </div>
 
             <!-- Botón de Envío -->

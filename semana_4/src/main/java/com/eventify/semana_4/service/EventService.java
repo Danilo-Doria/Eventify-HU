@@ -1,5 +1,6 @@
 package com.eventify.semana_4.service;
 
+import com.eventify.semana_4.dto.EventSummaryDTO;
 import com.eventify.semana_4.exception.ResourceNotFoundException;
 import com.eventify.semana_4.model.Category;
 import com.eventify.semana_4.model.Event;
@@ -10,9 +11,11 @@ import com.eventify.semana_4.repository.VenueRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -52,15 +55,59 @@ public class EventService {
     public Event findById(Long id) {
         // @SQLRestriction excluye automáticamente los eventos inactivos.
         return eventRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "El evento con id: '" + id + "' no fue encontrado."
-                ));
+                .orElseThrow(() -> new ResourceNotFoundException("El evento con id: '" + id + "' no fue encontrado.")
+                );
     }
 
     @Transactional(readOnly = true)
     public List<Event> findByNombreContaining(String nombre) {
         // Busca por nombre sin distinguir mayúsculas y minúsculas.
         return eventRepository.findByNombreContainingIgnoreCase(nombre);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Event> findByCiudad(String ciudad) {
+        // Busca eventos cuya ciudad contenga el texto indicado, ignorando mayúsculas y minúsculas.
+        return eventRepository.findByVenueCiudadContainingIgnoreCase(ciudad);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Event> findByFechaBetween(LocalDateTime fechaInicio, LocalDateTime fechaFin) {
+        // Busca eventos cuya fecha esté dentro del rango indicado.
+        return eventRepository.findByFechaBetween(fechaInicio, fechaFin);
+    }
+
+    @Transactional(readOnly = true)
+    public Slice<Event> findByCapacidad(Integer capacidad, Pageable pageable) {
+        // Busca eventos realizados en lugares con capacidad igual o superior a la indicada.
+        return eventRepository.findByVenueCapacidadGreaterThanEqualOrderByFechaDesc(capacidad, pageable);
+    }
+
+
+    @Transactional(readOnly = true)
+    public Slice<Event> findByCategoria(String nombre, Pageable pageable) {
+        // Busca eventos asociados a categorías cuyo nombre contenga el texto indicado.
+        return eventRepository.findByCategoriaNombreContainingIgnoreCase(nombre, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Slice<Event> findAllByFechaDesc(Pageable pageable) {
+        // Obtiene los eventos activos ordenados del más reciente al más antiguo sin calcular el total.
+        return eventRepository.findAllByOrderByFechaDesc(pageable);
+    }
+
+
+    @Transactional(readOnly = true)
+    public Slice<Event> findAllWithVenue(Pageable pageable) {
+        // Obtiene los eventos junto con su Venue para evitar consultas adicionales al acceder al lugar.
+        return eventRepository.findAllWithVenue(pageable);
+    }
+
+
+    @Transactional(readOnly = true)
+    public Slice<EventSummaryDTO> findEventSummaries(Pageable pageable) {
+        // Obtiene únicamente los datos necesarios para los listados masivos de eventos.
+        return eventRepository.findEventSummaries(pageable);
     }
 
     public Event update(Long id, Event event) {
