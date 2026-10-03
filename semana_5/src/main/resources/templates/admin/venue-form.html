@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuevo Lugar - Eventify</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans antialiased min-h-screen">
+
+<div class="max-w-3xl mx-auto px-4 py-8">
+
+    <!-- Encabezado del Panel -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-gray-200 pb-6 mb-8">
+        <div>
+            <h1 class="text-3xl font-extrabold tracking-tight text-gray-900">Registrar nuevo Lugar</h1>
+            <p class="mt-2 text-sm text-gray-600">Completa el formulario para añadir una nueva ubicación o recinto en
+                Eventify.</p>
+        </div>
+        <div class="mt-4 sm:mt-0">
+            <!-- Botón Volver con el estilo secundario del sistema de diseño -->
+            <a th:href="@{/admin/venues}" class="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm
+            font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50
+            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors cursor-pointer">
+                Volver al Panel
+            </a>
+        </div>
+    </div>
+
+    <!-- Contenedor del Formulario con Sombra y Bordes Redondeados -->
+    <div class="bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden p-6 sm:p-8">
+
+        <form th:action="@{/admin/venues}" th:object="${venue}" method="post" class="space-y-6">
+
+            <!-- Campo: Nombre -->
+            <div>
+                <label for="nombre" class="block text-sm font-semibold text-gray-700 mb-2">Nombre del Lugar</label>
+                <input type="text" id="nombre" th:field="*{nombre}"
+                       placeholder="Ej. Auditorio Central, Estadio Olímpico"
+                       class="block w-full rounded-md border border-gray-300 px-4 py-2.5 text-gray-900 placeholder-gray-400
+                        shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none text-sm transition-colors"
+                       required
+                >
+            </div>
+
+            <!-- Campo: Dirección -->
+            <div>
+                <label for="direccion" class="block text-sm font-semibold text-gray-700 mb-2">Dirección</label>
+                <input
+                        type="text"
+                        id="direccion"
+                        th:field="*{direccion}"
+                        placeholder="Ej. Av. de la Constitución 123, Planta Baja"
+                        class="block w-full rounded-md border border-gray-300 px-4 py-2.5 text-gray-900 placeholder-gray-400
+                        shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none text-sm transition-colors"
+                        required
+                >
+            </div>
+
+            <!-- Campo: Capacidad -->
+            <div>
+                <label for="capacidad" class="block text-sm font-semibold text-gray-700 mb-2">Capacidad Máxima</label>
+                <input
+                        type="number"
+                        id="capacidad"
+                        th:field="*{capacidad}"
+                        min="1"
+                        placeholder="0"
+                        class="block w-full sm:w-48 rounded-md border border-gray-300 px-4 py-2.5 text-gray-900 placeholder-gray-400
+                        shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none text-sm transition-colors"
+                        required
+                >
+            </div>
+
+            <!-- Botón de Envío -->
+            <div class="pt-4 border-t border-gray-200 flex justify-end">
+                <button type="submit" class="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm
+                font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700
+                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors cursor-pointer">
+                    Guardar Lugar
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+
+</body>
+</html>

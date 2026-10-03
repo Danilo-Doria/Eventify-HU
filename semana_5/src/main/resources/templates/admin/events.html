@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eventos - Eventify</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans antialiased min-h-screen">
+
+<div class="max-w-6xl mx-auto px-4 py-8">
+
+    <!-- Encabezado del Panel -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between border-b border-gray-200 pb-6 mb-8">
+        <div>
+            <h1 class="text-3xl font-extrabold tracking-tight text-gray-900">Panel de Eventos</h1>
+            <p class="mt-2 text-sm text-gray-600">Administra, visualiza y controla todos los eventos programados en
+                Eventify.</p>
+        </div>
+        <div class="mt-4 md:mt-0">
+            <a th:href="@{/admin/venues}" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm
+            font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700
+            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors cursor-pointer">
+                Ver Lugares
+            </a>
+
+            <a th:href="@{/admin/events/new}" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm
+            font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700
+            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors cursor-pointer">
+                Crear Nuevo Evento
+            </a>
+        </div>
+    </div>
+
+    <!-- Formulario de filtros del catálogo -->
+    <div class="bg-white shadow-sm border border-gray-200 rounded-xl p-6 mb-8">
+
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">
+            Buscar eventos
+        </h2>
+
+        <!-- Envía los filtros mediante parámetros GET para conservarlos en la URL -->
+        <form th:action="@{/admin/events}" method="get"
+              class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+            <!-- Filtro por ciudad -->
+            <div>
+                <label for="ciudad" class="block text-sm font-medium text-gray-700 mb-1">
+                    Ciudad
+                </label>
+
+                <input
+                        type="text"
+                        id="ciudad"
+                        name="ciudad"
+                        th:value="${ciudad}"
+                        placeholder="Ej. Bogotá"
+                        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm
+                        focus:border-indigo-500 focus:ring-indigo-500"
+                >
+            </div>
+
+            <!-- Filtro por categoría -->
+            <div>
+                <label for="categoria" class="block text-sm font-medium text-gray-700 mb-1">
+                    Categoría
+                </label>
+
+                <input
+                        type="text"
+                        id="categoria"
+                        name="categoria"
+                        th:value="${categoria}"
+                        placeholder="Ej. Rock"
+                        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm
+                        focus:border-indigo-500 focus:ring-indigo-500"
+                >
+            </div>
+
+            <!-- Filtro por capacidad mínima -->
+            <div>
+                <label for="capacidad" class="block text-sm font-medium text-gray-700 mb-1">
+                    Capacidad mínima
+                </label>
+
+                <input
+                        type="number"
+                        id="capacidad"
+                        name="capacidad"
+                        th:value="${capacidad}"
+                        min="1"
+                        placeholder="Ej. 5000"
+                        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm
+                        focus:border-indigo-500 focus:ring-indigo-500"
+                >
+            </div>
+
+            <!-- Filtro por fecha inicial -->
+            <div>
+                <label for="fechaInicio" class="block text-sm font-medium text-gray-700 mb-1">
+                    Fecha desde
+                </label>
+
+                <input
+                        type="datetime-local"
+                        id="fechaInicio"
+                        name="fechaInicio"
+                        th:value="${fechaInicio != null ? #temporals.format(fechaInicio, 'yyyy-MM-dd''T''HH:mm') : ''}"
+                        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm
+                        focus:border-indigo-500 focus:ring-indigo-500"
+                >
+            </div>
+
+            <!-- Filtro por fecha final -->
+            <div>
+                <label for="fechaFin" class="block text-sm font-medium text-gray-700 mb-1">
+                    Fecha hasta
+                </label>
+
+                <input
+                        type="datetime-local"
+                        id="fechaFin"
+                        name="fechaFin"
+                        th:value="${fechaFin != null ? #temporals.format(fechaFin, 'yyyy-MM-dd''T''HH:mm') : ''}"
+                        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm
+                        focus:border-indigo-500 focus:ring-indigo-500"
+                >
+            </div>
+
+            <!-- Botones del formulario -->
+            <div class="flex items-end gap-2">
+
+                <!-- Aplica los filtros y vuelve a la primera página -->
+                <button
+                        type="submit"
+                        class="inline-flex items-center justify-center px-4 py-2 border border-transparent
+                        text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600
+                        hover:bg-indigo-700 transition-colors cursor-pointer">
+                    Buscar
+                </button>
+
+                <!-- Limpia todos los filtros -->
+                <a
+                        th:href="@{/admin/events}"
+                        class="inline-flex items-center justify-center px-4 py-2 border border-gray-300
+                        text-sm font-medium rounded-md text-gray-700 bg-white
+                        hover:bg-gray-50 transition-colors">
+                    Limpiar
+                </a>
+
+            </div>
+
+        </form>
+    </div>
+
+    <!-- Contenedor con validación de Thymeleaf -->
+    <div class="bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden">
+
+        <!-- CASO CON INFORMACIÓN: Se renderiza la tabla si la lista 'events.content' NO está vacía -->
+        <div class="overflow-x-auto" th:unless="${events.isEmpty()}">
+            <table class="min-w-full divide-y divide-gray-200 text-left">
+                <thead class="bg-gray-50 text-xs font-semibold uppercase tracking-wider text-gray-600">
+                <tr>
+                    <th scope="col" class="px-6 py-4">Nombre del Evento</th>
+                    <th scope="col" class="px-6 py-4">Fecha</th>
+                    <th scope="col" class="px-6 py-4">Lugar</th>
+                    <th scope="col" class="px-6 py-4">Ciudad</th>
+                </tr>
+                </thead>
+
+                <tbody class="divide-y divide-gray-200 bg-white text-sm">
+
+                <!-- Recorre los eventos contenidos en la página actual -->
+                <tr th:each="event : ${events.content}" class="hover:bg-gray-50 transition-colors">
+
+                    <!-- Nombre -->
+                    <td class="px-6 py-4 font-semibold text-gray-900"
+                        th:text="${event.nombre}">
+                    </td>
+
+                    <!-- Fecha -->
+                    <td class="whitespace-nowrap px-6 py-4 text-gray-500"
+                        th:text="${#temporals.format(event.fecha, 'dd/MM/yyyy HH:mm')}">
+                    </td>
+
+                    <!-- Nombre del Venue -->
+                    <td class="px-6 py-4 text-gray-600"
+                        th:text="${event.venueNombre}">
+                    </td>
+
+                    <!-- Ciudad -->
+                    <td class="px-6 py-4 text-gray-600"
+                        th:text="${event.ciudad}">
+                    </td>
+
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- CASO FALLBACK: Se muestra este mensaje si 'events.content' SÍ está vacía -->
+        <div class="p-12 text-center" th:if="${events.isEmpty()}">
+            <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 mb-4">
+                <!-- Icono de calendario o alerta -->
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
+                </svg>
+            </div>
+
+            <h3 class="text-sm font-semibold text-gray-900">No hay eventos disponibles</h3>
+
+            <p class="mt-1 text-sm text-gray-500">
+                Por el momento no se han encontrado registros de eventos en la plataforma.
+            </p>
+        </div>
+
+        <!-- Navegación de paginación -->
+        <div
+                th:unless="${events.isEmpty()}"
+                class="flex items-center justify-between border-t border-gray-200 px-6 py-4">
+
+            <!-- Botón Anterior -->
+            <a
+                    th:if="${events.hasPrevious()}"
+                    th:href="@{/admin/events(
+                        page=${events.number - 1},
+                        size=${events.size},
+                        ciudad=${ciudad},
+                        categoria=${categoria},
+                        capacidad=${capacidad},
+                        fechaInicio=${fechaInicio != null ? #temporals.format(fechaInicio, 'yyyy-MM-dd''T''HH:mm') : null},
+                        fechaFin=${fechaFin != null ? #temporals.format(fechaFin, 'yyyy-MM-dd''T''HH:mm') : null}
+                    )}"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium
+                    rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                Anterior
+            </a>
+
+            <!-- Espacio cuando no existe página anterior -->
+            <span
+                    th:unless="${events.hasPrevious()}"
+                    class="inline-flex items-center px-4 py-2 border border-gray-200 text-sm font-medium
+                    rounded-md text-gray-400 bg-gray-50 cursor-not-allowed">
+                Anterior
+            </span>
+
+            <!-- Información de la página actual -->
+            <span class="text-sm text-gray-500">
+                Página <span th:text="${events.number + 1}"></span>
+            </span>
+
+            <!-- Botón Siguiente -->
+            <a
+                    th:if="${events.hasNext()}"
+                    th:href="@{/admin/events(
+                        page=${events.number + 1},
+                        size=${events.size},
+                        ciudad=${ciudad},
+                        categoria=${categoria},
+                        capacidad=${capacidad},
+                        fechaInicio=${fechaInicio != null ? #temporals.format(fechaInicio, 'yyyy-MM-dd''T''HH:mm') : null},
+                        fechaFin=${fechaFin != null ? #temporals.format(fechaFin, 'yyyy-MM-dd''T''HH:mm') : null}
+                    )}"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium
+                    rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                Siguiente
+            </a>
+
+            <!-- Espacio cuando no existe página siguiente -->
+            <span
+                    th:unless="${events.hasNext()}"
+                    class="inline-flex items-center px-4 py-2 border border-gray-200 text-sm font-medium
+                    rounded-md text-gray-400 bg-gray-50 cursor-not-allowed">
+                Siguiente
+            </span>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>
