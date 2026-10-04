@@ -1,7 +1,5 @@
 package com.eventify.semana_5.controller;
 
-import com.eventify.semana_5.dto.EventCreateDTO;
-import com.eventify.semana_5.dto.EventResponseDTO;
 import com.eventify.semana_5.dto.EventSummaryDTO;
 import com.eventify.semana_5.dto.VenueCreateDTO;
 import com.eventify.semana_5.dto.VenueResponseDTO;

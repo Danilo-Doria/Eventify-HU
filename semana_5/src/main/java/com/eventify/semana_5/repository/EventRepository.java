@@ -15,44 +15,7 @@ import java.util.List;
 
 @Repository
 public interface EventRepository extends JpaRepository<Event, Long> {
-
     List<Event> findByNombreContainingIgnoreCase(String nombre);
-
-    List<Event> findByVenueCiudadContainingIgnoreCase(String ciudad);
-
-    // Busca eventos cuya fecha esté dentro del rango indicado.
-    List<Event> findByFechaBetween(LocalDateTime fechaInicio, LocalDateTime fechaFin);
-
-    // Obtiene eventos paginados sin calcular el total de registros.
-    Slice<Event> findAllByOrderByFechaDesc(Pageable pageable);
-
-    // Busca eventos asociados a una categoría por su nombre.
-    @Query("""
-            SELECT DISTINCT e
-            FROM Event e
-            JOIN e.categories c
-            WHERE LOWER(c.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))
-            ORDER BY e.fecha DESC
-            """)
-    Slice<Event> findByCategoriaNombreContainingIgnoreCase(
-            @Param("nombre") String nombre,
-            Pageable pageable
-    );
-
-    // Carga el Venue junto con cada Event para evitar consultas adicionales al acceder al lugar.
-    @EntityGraph(attributePaths = {"venue"})
-    @Query("""
-            SELECT e
-            FROM Event e
-            ORDER BY e.fecha DESC
-            """)
-    Slice<Event> findAllWithVenue(Pageable pageable);
-
-    // Busca eventos cuyo Venue tenga una capacidad igual o superior a la indicada.
-    Slice<Event> findByVenueCapacidadGreaterThanEqualOrderByFechaDesc(
-            Integer capacidad,
-            Pageable pageable
-    );
 
     // Devuelve un resumen paginado de eventos, consultando solo los campos necesarios.
     @Query("""

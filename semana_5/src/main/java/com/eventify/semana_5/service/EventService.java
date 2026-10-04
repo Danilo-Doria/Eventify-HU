@@ -59,12 +59,6 @@ public class EventService {
     }
 
     @Transactional(readOnly = true)
-    public EventCreateDTO findCreateDTOById(Long id) {
-        Event event = findById(id);
-        return eventMapper.toCreateDTO(event);
-    }
-
-    @Transactional(readOnly = true)
     public Slice<EventSummaryDTO> findAllSummary(Pageable pageable) {
         return eventRepository.findEventSummaries(pageable);
     }
