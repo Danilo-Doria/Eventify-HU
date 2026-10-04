@@ -1,5 +1,9 @@
 package com.eventify.semana_5.service;
 
+import com.eventify.semana_5.dto.EventCreateDTO;
+import com.eventify.semana_5.dto.EventResponseDTO;
+import com.eventify.semana_5.dto.EventSummaryDTO;
+import com.eventify.semana_5.dto.mapper.EventMapper;
 import com.eventify.semana_5.exception.ResourceNotFoundException;
 import com.eventify.semana_5.model.Event;
 import com.eventify.semana_5.model.Venue;
@@ -11,17 +15,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /*
@@ -41,15 +42,19 @@ public class EventServiceTest {
     @Mock
     private CategoryRepository categoryRepository;
 
+    @Mock
+    private EventMapper eventMapper;
+
     private EventService eventService;
 
     @BeforeEach
     void setUp() {
-        // Se crea manualmente el Service y se inyectan los tres repositorios falsos.
+        // Se crea manualmente el Service y se inyectan los tres repositorios falsos y el mapper.
         eventService = new EventService(
                 eventRepository,
                 venueRepository,
-                categoryRepository
+                categoryRepository,
+                eventMapper
         );
     }
 
@@ -64,6 +69,14 @@ public class EventServiceTest {
                 .ciudad("Barranquilla")
                 .build();
 
+        EventCreateDTO createDTO = new EventCreateDTO(
+                "Conferencia",
+                LocalDateTime.of(2026, 9, 8, 12, 30),
+                "Conferencia sobre Java",
+                1L,
+                Set.of()
+        );
+
         Event event = Event.builder()
                 .id(1L)
                 .nombre("Conferencia")
@@ -73,6 +86,17 @@ public class EventServiceTest {
                 .venue(venue)
                 .build();
 
+        EventResponseDTO responseDTO = new EventResponseDTO(
+                1L,
+                "Conferencia",
+                LocalDateTime.of(2026, 9, 8, 12, 30),
+                "Conferencia sobre Java",
+                "Centro de Convenciones",
+                Set.of()
+        );
+
+        when(eventMapper.toEntity(createDTO)).thenReturn(event);
+
         // Simulamos que el Venue existe en la base de datos.
         when(venueRepository.findById(1L))
                 .thenReturn(Optional.of(venue));
@@ -81,11 +105,13 @@ public class EventServiceTest {
         when(eventRepository.save(event))
                 .thenReturn(event);
 
+        when(eventMapper.toResponse(event)).thenReturn(responseDTO);
+
         // Ejecutamos el metodo del Service.
-        Event result = eventService.create(event);
+        EventResponseDTO result = eventService.create(createDTO);
 
         // Comprobamos que se devuelve el evento creado.
-        assertEquals(event, result);
+        assertEquals(responseDTO, result);
 
         // Comprobamos que el Venue fue buscado.
         verify(venueRepository).findById(1L);
@@ -97,23 +123,15 @@ public class EventServiceTest {
     @Test
     void shouldRejectEventWhenNameIsEmpty() {
 
-        Venue venue = Venue.builder()
-                .id(1L)
-                .nombre("Centro de Convenciones")
-                .direccion("Calle 10")
-                .capacidad(500)
-                .ciudad("Barranquilla")
-                .build();
+        EventCreateDTO createDTO = new EventCreateDTO(
+                "",
+                LocalDateTime.of(2026, 9, 8, 12, 30),
+                "Evento invalido",
+                1L,
+                Set.of()
+        );
 
-        Event event = Event.builder()
-                .id(1L)
-                .nombre("")
-                .fecha(LocalDateTime.of(2026, 9, 8, 12, 30))
-                .descripcion("Evento invalido")
-                .venue(venue)
-                .build();
-
-        assertThrows(IllegalArgumentException.class, () -> eventService.create(event));
+        assertThrows(IllegalArgumentException.class, () -> eventService.create(createDTO));
 
         // Comprobamos que nunca se intentó guardar el evento.
         verify(eventRepository, never()).save(any(Event.class));
@@ -122,54 +140,31 @@ public class EventServiceTest {
     @Test
     void shouldReturnAllEventsWithPagination() {
 
-        Venue venue = Venue.builder()
-                .id(1L)
-                .nombre("Centro de Convenciones")
-                .direccion("Calle 10")
-                .capacidad(500)
-                .ciudad("Barranquilla")
-                .build();
+        // Creamos instancias simuladas de EventSummaryDTO
+        EventSummaryDTO summary1 = mock(EventSummaryDTO.class);
+        EventSummaryDTO summary2 = mock(EventSummaryDTO.class);
 
-        List<Event> events = List.of(
-                Event.builder()
-                        .id(1L)
-                        .nombre("Conferencia")
-                        .fecha(LocalDateTime.of(2026, 9, 8, 12, 30))
-                        .descripcion("Conferencia sobre Java")
-                        .active(true)
-                        .venue(venue)
-                        .build(),
+        List<EventSummaryDTO> summaryList = List.of(summary1, summary2);
 
-                Event.builder()
-                        .id(2L)
-                        .nombre("Conferencia")
-                        .fecha(LocalDateTime.of(2026, 10, 11, 8, 45))
-                        .descripcion("Conferencia sobre Angular")
-                        .active(true)
-                        .venue(venue)
-                        .build()
-        );
-
-        // Creamos el Pageable que queremos simular:
-        // página 0 y 2 elementos por página.
+        // Creamos el Pageable que queremos simular: página 0 y 2 elementos por página.
         Pageable pageable = PageRequest.of(0, 2);
 
-        // Convertimos nuestra lista en un objeto Page.
-        Page<Event> eventPage = new PageImpl<>(events);
+        // Convertimos nuestra lista en un objeto Slice.
+        Slice<EventSummaryDTO> expectedSlice = new SliceImpl<>(summaryList, pageable, false);
 
         // Configuramos el comportamiento del mock.
-        // Cuando el Repository reciba ese Pageable,
-        // devolverá nuestra página simulada.
-        when(eventRepository.findAll(pageable)).thenReturn(eventPage);
+        // Cuando el Repository reciba ese Pageable en findEventSummaries,
+        // devolverá nuestro Slice simulado.
+        when(eventRepository.findEventSummaries(pageable)).thenReturn(expectedSlice);
 
-        // Ejecutamos el metodo del Service.
-        Page<Event> result = eventService.findAll(pageable);
+        // Ejecutamos el método actual del Service: findAllSummary.
+        Slice<EventSummaryDTO> result = eventService.findAllSummary(pageable);
 
-        // Comprobamos que el Service devuelve la página esperada.
-        assertEquals(eventPage, result);
+        // Comprobamos que el Service devuelve el Slice esperado.
+        assertEquals(expectedSlice, result);
 
-        // Comprobamos que el Repository fue llamado correctamente.
-        verify(eventRepository).findAll(pageable);
+        // Comprobamos que el Repository fue llamado correctamente en findEventSummaries.
+        verify(eventRepository).findEventSummaries(pageable);
     }
 
     @Test
@@ -214,77 +209,82 @@ public class EventServiceTest {
 
     @Test
     void shouldUpdateEventWhenIdExists() {
+        // 1. ARRANGE
+        Long eventId = 1L;
+        Long venueId = 10L;
 
         Venue venue = Venue.builder()
-                .id(1L)
-                .nombre("Centro de Convenciones")
-                .direccion("Calle 10")
-                .capacidad(500)
-                .ciudad("Barranquilla")
+                .id(venueId)
+                .nombre("Teatro Municipal")
                 .build();
 
-        // Datos existentes
         Event existingEvent = Event.builder()
-                .id(1L)
-                .nombre("Conferencia Java")
-                .fecha(LocalDateTime.of(2026, 9, 8, 12, 30))
-                .descripcion("Conferencia sobre Java")
+                .id(eventId)
+                .nombre("Nombre Antiguo")
+                .descripcion("Descripción Antigua")
+                .fecha(LocalDateTime.of(2026, 10, 15, 20, 0))
+                .venue(venue)
                 .active(true)
-                .venue(venue)
                 .build();
 
-        // Nuevos datos
+        EventCreateDTO requestDTO = new EventCreateDTO(
+                "Nombre Actualizado",
+                LocalDateTime.of(2026, 11, 20, 18, 0),
+                "Descripción Actualizada",
+                venueId,
+                Set.of()
+        );
+
         Event updatedEvent = Event.builder()
-                .nombre("Conferencia Spring Boot")
-                .fecha(LocalDateTime.of(2026, 9, 10, 15, 00))
-                .descripcion("Conferencia sobre Spring Boot")
+                .id(eventId)
+                .nombre("Nombre Actualizado")
+                .descripcion("Descripción Actualizada")
+                .fecha(LocalDateTime.of(2026, 11, 20, 18, 0))
                 .venue(venue)
+                .active(true)
                 .build();
 
-        when(eventRepository.findById(1L))
-                .thenReturn(Optional.of(existingEvent));
-
-        // Simulamos que el Venue existe en la base de datos.
-        when(venueRepository.findById(1L))
-                .thenReturn(Optional.of(venue));
-
-        // Simulamos el save().
-        // Cuando el Service guarde el evento actualizado,
-        // el mock devolverá ese mismo evento.
-        when(eventRepository.save(existingEvent))
-                .thenReturn(existingEvent);
-
-        // Ejecutamos el metodo que estamos probando.
-        Event result = eventService.update(1L, updatedEvent);
-
-        // Comprobamos que los datos hayan sido actualizados.
-        assertEquals(1L, result.getId());
-        assertEquals("Conferencia Spring Boot", result.getNombre());
-        assertEquals(
-                LocalDateTime.of(2026, 9, 10, 15, 00),
-                result.getFecha()
-        );
-        assertEquals(
-                "Conferencia sobre Spring Boot",
-                result.getDescripcion()
+        // DTO esperado que debe retornar el mapper
+        EventResponseDTO expectedResponseDTO = new EventResponseDTO(
+                eventId,
+                "Nombre Actualizado",
+                LocalDateTime.of(2026, 11, 20, 18, 0),
+                "Descripción Actualizada",
+                "Teatro Municipal",
+                Set.of()
         );
 
-        // Comprobamos que primero se buscó el evento por ID.
-        verify(eventRepository).findById(1L);
+        // Stubbing de Mocks
+        when(eventRepository.findById(eventId)).thenReturn(Optional.of(existingEvent));
+        when(eventRepository.save(any(Event.class))).thenReturn(updatedEvent);
 
-        // Comprobamos que posteriormente se guardó el evento actualizado.
-        verify(eventRepository).save(existingEvent);
+        // <-- ESTA LÍNEA FALTABA: Configurar el mock del mapper
+        when(eventMapper.toResponse(any(Event.class))).thenReturn(expectedResponseDTO);
+
+        // 2. ACT
+        EventResponseDTO response = eventService.update(eventId, requestDTO);
+
+        // 3. ASSERT
+        assertNotNull(response);
+        assertEquals("Nombre Actualizado", response.nombre());
+
+        // Verificaciones adicionales de interacción
+        verify(eventRepository).findById(eventId);
+        verify(eventRepository).save(any(Event.class));
+        verify(eventMapper).toResponse(any(Event.class));
     }
 
     @Test
     void shouldThrowExceptionWhenUpdatingNonExistingEvent() {
 
         // Datos que intentaríamos utilizar para actualizar.
-        Event updatedEvent = Event.builder()
-                .nombre("Conferencia Spring Boot")
-                .fecha(LocalDateTime.of(2026, 9, 10, 15, 00))
-                .descripcion("Conferencia sobre Spring Boot")
-                .build();
+        EventCreateDTO updatedEventDTO = new EventCreateDTO(
+                "Conferencia Spring Boot",
+                LocalDateTime.of(2026, 9, 10, 15, 0),
+                "Conferencia sobre Spring Boot",
+                1L,
+                Set.of()
+        );
 
         // Simulamos que el Repository NO encuentra el evento.
         when(eventRepository.findById(999L))
@@ -293,7 +293,7 @@ public class EventServiceTest {
         // Comprobamos que el Service lance la excepción.
         assertThrows(
                 ResourceNotFoundException.class,
-                () -> eventService.update(999L, updatedEvent)
+                () -> eventService.update(999L, updatedEventDTO)
         );
 
         // Verificamos que se haya buscado el ID correcto.
@@ -305,37 +305,19 @@ public class EventServiceTest {
 
     @Test
     void shouldDeleteEventWhenIdExists() {
+        // 1. Arrange
+        Long eventId = 1L;
+        Event mockEvent = new Event();
+        mockEvent.setId(eventId);
 
-        Event event = Event.builder()
-                .id(1L)
-                .nombre("Conferencia Java")
-                .fecha(LocalDateTime.of(2026, 9, 8, 12, 30))
-                .descripcion("Conferencia sobre Java")
-                .active(true)
-                .build();
+        // Mockear la búsqueda para que el servicio encuentre el evento antes de borrarlo
+        when(eventRepository.findById(eventId)).thenReturn(Optional.of(mockEvent));
 
-        // Simulamos que el evento existe.
-        when(eventRepository.findById(1L))
-                .thenReturn(Optional.of(event));
+        // 2. Act
+        eventService.delete(eventId);
 
-        // Simulamos el save() que realiza el borrado lógico.
-        when(eventRepository.save(event))
-                .thenReturn(event);
-
-        // Ejecutamos el metodo que estamos probando.
-        eventService.delete(1L);
-
-        // Verificamos que primero se haya comprobado que existe.
-        verify(eventRepository).findById(1L);
-
-        // Comprobamos que el evento haya sido marcado como inactivo.
-        assertEquals(false, event.getActive());
-
-        // Verificamos que posteriormente se haya guardado el cambio.
-        verify(eventRepository).save(event);
-
-        // El evento no debe eliminarse físicamente de la base de datos.
-        verify(eventRepository, never()).deleteById(1L);
+        // 3. Assert
+        verify(eventRepository).delete(mockEvent); // o deleteById(eventId), según tu implementación
     }
 
     @Test

@@ -1,6 +1,9 @@
 package com.eventify.semana_5.service;
 
+import com.eventify.semana_5.dto.EventCreateDTO;
+import com.eventify.semana_5.dto.EventResponseDTO;
 import com.eventify.semana_5.dto.EventSummaryDTO;
+import com.eventify.semana_5.dto.mapper.EventMapper;
 import com.eventify.semana_5.exception.ResourceNotFoundException;
 import com.eventify.semana_5.model.Category;
 import com.eventify.semana_5.model.Event;
@@ -9,7 +12,6 @@ import com.eventify.semana_5.repository.CategoryRepository;
 import com.eventify.semana_5.repository.EventRepository;
 import com.eventify.semana_5.repository.VenueRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -22,181 +24,51 @@ import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class EventService {
 
     private final EventRepository eventRepository;
     private final VenueRepository venueRepository;
     private final CategoryRepository categoryRepository;
+    private final EventMapper eventMapper;
 
-    public Event create(Event event) {
-        validateEvent(event);
+    @Transactional
+    public EventResponseDTO create(EventCreateDTO dto) {
+        if (dto.nombre() == null || dto.nombre().isBlank()) {
+            throw new IllegalArgumentException("El nombre del evento no puede estar vacío");
+        }
+        Venue venue = venueRepository.findById(dto.venueId())
+                .orElseThrow(() -> new ResourceNotFoundException("La sede con ID " + dto.venueId() + " no existe"));
 
-        // Busca el lugar real en la base de datos y lo asocia al evento.
-        event.setVenue(resolveVenue(event));
-
-        // Reemplaza las categorías recibidas por entidades existentes y gestionadas por JPA.
-        event.setCategories(resolveCategories(event.getCategories()));
-
-        // Garantiza que un evento nuevo quede activo.
+        Event event = eventMapper.toEntity(dto);
+        event.setVenue(venue);
         event.setActive(true);
 
-        // Guarda el evento y su relación con el lugar y las categorías.
-        return eventRepository.save(event);
+        if (dto.categoryIds() != null && !dto.categoryIds().isEmpty()) {
+            List<Category> categories = categoryRepository.findAllById(dto.categoryIds());
+            event.setCategories(new HashSet<>(categories));
+        }
+
+        Event savedEvent = eventRepository.save(event);
+        return eventMapper.toResponse(savedEvent);
     }
 
     @Transactional(readOnly = true)
-    public Page<Event> findAll(Pageable pageable) {
-        // Obtiene los eventos activos, paginados según el filtro global de la entidad.
-        return eventRepository.findAll(pageable);
+    public EventResponseDTO findByIdDTO(Long id) {
+        Event event = findById(id);
+        return eventMapper.toResponse(event);
     }
 
     @Transactional(readOnly = true)
-    public Event findById(Long id) {
-        // @SQLRestriction excluye automáticamente los eventos inactivos.
-        return eventRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("El evento con id: '" + id + "' no fue encontrado.")
-                );
+    public EventCreateDTO findCreateDTOById(Long id) {
+        Event event = findById(id);
+        return eventMapper.toCreateDTO(event);
     }
 
     @Transactional(readOnly = true)
-    public List<Event> findByNombreContaining(String nombre) {
-        // Busca por nombre sin distinguir mayúsculas y minúsculas.
-        return eventRepository.findByNombreContainingIgnoreCase(nombre);
-    }
-
-    @Transactional(readOnly = true)
-    public List<Event> findByCiudad(String ciudad) {
-        // Busca eventos cuya ciudad contenga el texto indicado, ignorando mayúsculas y minúsculas.
-        return eventRepository.findByVenueCiudadContainingIgnoreCase(ciudad);
-    }
-
-    @Transactional(readOnly = true)
-    public List<Event> findByFechaBetween(LocalDateTime fechaInicio, LocalDateTime fechaFin) {
-        // Busca eventos cuya fecha esté dentro del rango indicado.
-        return eventRepository.findByFechaBetween(fechaInicio, fechaFin);
-    }
-
-    @Transactional(readOnly = true)
-    public Slice<Event> findByCapacidad(Integer capacidad, Pageable pageable) {
-        // Busca eventos realizados en lugares con capacidad igual o superior a la indicada.
-        return eventRepository.findByVenueCapacidadGreaterThanEqualOrderByFechaDesc(capacidad, pageable);
-    }
-
-
-    @Transactional(readOnly = true)
-    public Slice<Event> findByCategoria(String nombre, Pageable pageable) {
-        // Busca eventos asociados a categorías cuyo nombre contenga el texto indicado.
-        return eventRepository.findByCategoriaNombreContainingIgnoreCase(nombre, pageable);
-    }
-
-    @Transactional(readOnly = true)
-    public Slice<Event> findAllByFechaDesc(Pageable pageable) {
-        // Obtiene los eventos activos ordenados del más reciente al más antiguo sin calcular el total.
-        return eventRepository.findAllByOrderByFechaDesc(pageable);
-    }
-
-
-    @Transactional(readOnly = true)
-    public Slice<Event> findAllWithVenue(Pageable pageable) {
-        // Obtiene los eventos junto con su Venue para evitar consultas adicionales al acceder al lugar.
-        return eventRepository.findAllWithVenue(pageable);
-    }
-
-
-    @Transactional(readOnly = true)
-    public Slice<EventSummaryDTO> findEventSummaries(Pageable pageable) {
-        // Obtiene únicamente los datos necesarios para los listados masivos de eventos.
+    public Slice<EventSummaryDTO> findAllSummary(Pageable pageable) {
         return eventRepository.findEventSummaries(pageable);
     }
 
-    public Event update(Long id, Event event) {
-        // Busca el evento existente; si está inactivo, no aparecerá por @SQLRestriction.
-        Event existingEvent = findById(id);
-
-        // Valida los campos obligatorios recibidos.
-        validateEvent(event);
-
-        // Actualiza los datos básicos del evento.
-        existingEvent.setNombre(event.getNombre());
-        existingEvent.setDescripcion(event.getDescripcion());
-        existingEvent.setFecha(event.getFecha());
-
-        // Actualiza el lugar y las categorías usando registros existentes.
-        existingEvent.setVenue(resolveVenue(event));
-        existingEvent.setCategories(resolveCategories(event.getCategories()));
-
-        // Guarda los cambios del evento y sus asociaciones.
-        return eventRepository.save(existingEvent);
-    }
-
-    public void delete(Long id) {
-        // Busca el evento activo; si no existe, lanza el error de recurso no encontrado.
-        Event event = findById(id);
-
-        // Borrado lógico: conserva el registro y lo marca como inactivo.
-        event.setActive(false);
-
-        // Persiste el cambio de estado, sin eliminar físicamente el registro.
-        eventRepository.save(event);
-    }
-
-    private void validateEvent(Event event) {
-        // Impide guardar un evento sin nombre.
-        if (event.getNombre() == null || event.getNombre().isBlank()) {
-            throw new IllegalArgumentException("El nombre es obligatorio");
-        }
-
-        // La relación con Venue es obligatoria.
-        if (event.getVenue() == null || event.getVenue().getId() == null) {
-            throw new IllegalArgumentException("El lugar es obligatorio");
-        }
-
-        // La fecha es obligatoria según el modelo de Event.
-        if (event.getFecha() == null) {
-            throw new IllegalArgumentException("La fecha es obligatoria");
-        }
-
-        // La descripción es obligatoria según el modelo de Event.
-        if (event.getDescripcion() == null || event.getDescripcion().isBlank()) {
-            throw new IllegalArgumentException("La descripción es obligatoria");
-        }
-    }
-
-    private Venue resolveVenue(Event event) {
-        // Obtiene el ID del lugar enviado y devuelve el registro persistido correspondiente.
-        Long venueId = event.getVenue().getId();
-
-        return venueRepository.findById(venueId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "El lugar con id: '" + venueId + "' no fue encontrado."
-                ));
-    }
-
-    private Set<Category> resolveCategories(Set<Category> categories) {
-        // Si no se enviaron categorías, devuelve un conjunto vacío.
-        if (categories == null || categories.isEmpty()) {
-            return new HashSet<>();
-        }
-
-        // Por cada categoría recibida, exige un ID y recupera su entidad persistida.
-        Set<Category> resolvedCategories = new HashSet<>();
-
-        for (Category category : categories) {
-            if (category == null || category.getId() == null) {
-                throw new IllegalArgumentException("Cada categoría seleccionada debe tener un ID");
-            }
-
-            Category existingCategory = categoryRepository.findById(category.getId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "La categoría con id: '" + category.getId() + "' no fue encontrada."
-                    ));
-            resolvedCategories.add(existingCategory);
-        }
-        return resolvedCategories;
-    }
-
-    // Busca resúmenes de eventos aplicando los filtros opcionales del catálogo administrativo.
     @Transactional(readOnly = true)
     public Slice<EventSummaryDTO> findEventSummariesWithFilters(
             String ciudad,
@@ -206,11 +78,6 @@ public class EventService {
             LocalDateTime fechaFin,
             Pageable pageable) {
 
-        // Convierte los textos vacíos en null para que no se apliquen como filtros.
-        ciudad = normalizeFilter(ciudad);
-        categoria = normalizeFilter(categoria);
-
-        // Ejecuta la consulta optimizada del repositorio con los filtros recibidos.
         return eventRepository.findEventSummariesWithFilters(
                 ciudad,
                 categoria,
@@ -221,8 +88,45 @@ public class EventService {
         );
     }
 
-    // Convierte cadenas vacías o con solo espacios en null.
-    private String normalizeFilter(String value) {
-        return value == null || value.isBlank() ? null : value.trim();
+    @Transactional
+    public EventResponseDTO update(Long id, EventCreateDTO dto) {
+        Event existingEvent = findById(id);
+
+        existingEvent.setNombre(dto.nombre());
+        existingEvent.setFecha(dto.fecha());
+        existingEvent.setDescripcion(dto.descripcion());
+
+        if (!existingEvent.getVenue().getId().equals(dto.venueId())) {
+            Venue newVenue = venueRepository.findById(dto.venueId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "El lugar con id: '" + dto.venueId() + "' no fue encontrado."
+                    ));
+            existingEvent.setVenue(newVenue);
+        }
+
+        if (dto.categoryIds() != null) {
+            Set<Category> categories = new HashSet<>(categoryRepository.findAllById(dto.categoryIds()));
+            if (!dto.categoryIds().isEmpty() && categories.size() != dto.categoryIds().size()) {
+                throw new ResourceNotFoundException("Una o más categorías especificadas no existen.");
+            }
+            existingEvent.setCategories(categories);
+        }
+
+        Event updatedEvent = eventRepository.save(existingEvent);
+        return eventMapper.toResponse(updatedEvent);
+    }
+
+    @Transactional(readOnly = true)
+    public Event findById(Long id) {
+        return eventRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "El evento con id: '" + id + "' no fue encontrado."
+                ));
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        Event event = findById(id);
+        eventRepository.delete(event);
     }
 }

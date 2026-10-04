@@ -1,5 +1,8 @@
 package com.eventify.semana_5.service;
 
+import com.eventify.semana_5.dto.VenueCreateDTO;
+import com.eventify.semana_5.dto.VenueResponseDTO;
+import com.eventify.semana_5.dto.mapper.VenueMapper;
 import com.eventify.semana_5.exception.ResourceNotFoundException;
 import com.eventify.semana_5.model.Venue;
 import com.eventify.semana_5.repository.VenueRepository;
@@ -14,70 +17,70 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class VenueService {
+
     private final VenueRepository venueRepository;
+    private final VenueMapper venueMapper;
 
-    public Venue create(Venue venue) {
-        if (venue.getNombre() == null || venue.getNombre().isBlank()) {
-            throw new IllegalArgumentException("El nombre es obligatorio");
+    @Transactional
+    public VenueResponseDTO create(VenueCreateDTO dto) {
+        if (dto.nombre() == null || dto.nombre().isBlank()) {
+            throw new IllegalArgumentException("El nombre de la sede no puede estar vacío");
         }
-
-        if (venue.getCapacidad() == null || venue.getCapacidad() <= 0) {
-            throw new IllegalArgumentException("La capacidad debe ser mayor a cero");
+        if (dto.capacidad() == null || dto.capacidad() <= 0) {
+            throw new IllegalArgumentException("La capacidad debe ser mayor a 0");
         }
-
-        if (venue.getCiudad() == null || venue.getCiudad().isBlank()) {
-            throw new IllegalArgumentException("La ciudad es obligatoria");
-        }
-
-        return venueRepository.save(venue);
-    }
-
-    public Page<Venue> findAll(Pageable pageable) {
-        return venueRepository.findAll(pageable);
-    }
-
-    public Venue findById(Long id) {
-        return venueRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                                "El lugar con id: '" + id + "' no fue encontrado."
-                        )
-                );
+        Venue venue = venueMapper.toEntity(dto);
+        Venue savedVenue = venueRepository.save(venue);
+        return venueMapper.toResponse(savedVenue);
     }
 
     @Transactional(readOnly = true)
-    public List<Venue> findAll() {
-        return venueRepository.findAll();
+    public List<VenueResponseDTO> findAll() {
+        return venueRepository.findAll().stream()
+                .map(venueMapper::toResponse)
+                .toList();
     }
 
-    public Venue update(Long id, Venue venue) {
-        Venue existingVenue = venueRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("El lugar con id: '" + id + "' no fue encontrado."));
-
-        if (venue.getNombre() == null || venue.getNombre().isBlank()) {
-            throw new IllegalArgumentException("El nombre es obligatorio");
-        }
-
-        if (venue.getCapacidad() == null || venue.getCapacidad() <= 0) {
-            throw new IllegalArgumentException("La capacidad debe ser mayor a cero");
-        }
-
-        // La ciudad es obligatoria para filtrar lugares y eventos por ubicación.
-        if (venue.getCiudad() == null || venue.getCiudad().isBlank()) {
-            throw new IllegalArgumentException("La ciudad es obligatoria");
-        }
-
-        existingVenue.setNombre(venue.getNombre());
-        existingVenue.setDireccion(venue.getDireccion());
-        existingVenue.setCapacidad(venue.getCapacidad());
-        existingVenue.setCiudad(venue.getCiudad());
-
-        return venueRepository.save(existingVenue);
+    @Transactional(readOnly = true)
+    public Page<VenueResponseDTO> findAll(Pageable pageable) {
+        return venueRepository.findAll(pageable)
+                .map(venueMapper::toResponse);
     }
 
+    // Metodo solicitado por VenueController para respuestas paginadas en DTO
+    @Transactional(readOnly = true)
+    public Page<VenueResponseDTO> findAllDTO(Pageable pageable) {
+        return findAll(pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public VenueResponseDTO findByIdDTO(Long id) {
+        Venue venue = findById(id);
+        return venueMapper.toResponse(venue);
+    }
+
+    @Transactional(readOnly = true)
+    public Venue findById(Long id) {
+        return venueRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "La sede con id: '" + id + "' no fue encontrada."
+                ));
+    }
+
+    @Transactional
+    public VenueResponseDTO update(Long id, VenueCreateDTO dto) {
+        Venue venue = findById(id);
+        venue.setNombre(dto.nombre());
+        venue.setDireccion(dto.direccion());
+        venue.setCapacidad(dto.capacidad());
+        venue.setCiudad(dto.ciudad());
+        Venue updatedVenue = venueRepository.save(venue);
+        return venueMapper.toResponse(updatedVenue);
+    }
+
+    @Transactional
     public void delete(Long id) {
-        venueRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("El lugar con id: '" + id + "' no fue encontrado."));
-
-        venueRepository.deleteById(id);
+        Venue venue = findById(id);
+        venueRepository.delete(venue);
     }
 }

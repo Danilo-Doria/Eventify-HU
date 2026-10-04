@@ -70,31 +70,26 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     // Busca eventos aplicando opcionalmente ciudad, categoría, capacidad y rango de fechas.
     // Al devolver un DTO y un Slice, evita cargar entidades completas y evita calcular el total.
     @Query("""
-            SELECT DISTINCT new com.eventify.semana_5.dto.EventSummaryDTO(
-                e.nombre,
-                e.fecha,
-                v.nombre,
-                v.ciudad
-            )
-            FROM Event e
-            JOIN e.venue v
-            LEFT JOIN e.categories c
-            WHERE
-                (:ciudad IS NULL OR
-                    LOWER(v.ciudad) LIKE LOWER(CONCAT('%', :ciudad, '%')))
-            AND
-                (:categoria IS NULL OR
-                    LOWER(c.nombre) LIKE LOWER(CONCAT('%', :categoria, '%')))
-            AND
-                (:capacidad IS NULL OR
-                    v.capacidad >= :capacidad)
-            AND
-                (:fechaInicio IS NULL OR
-                    e.fecha >= :fechaInicio)
-            AND
-                (:fechaFin IS NULL OR
-                    e.fecha <= :fechaFin)
-            """)
+        SELECT DISTINCT new com.eventify.semana_5.dto.EventSummaryDTO(
+            e.nombre,
+            e.fecha,
+            v.nombre,
+            v.ciudad
+        )
+        FROM Event e
+        JOIN e.venue v
+        LEFT JOIN e.categories c
+        WHERE
+            (:ciudad IS NULL OR :ciudad = '' OR LOWER(v.ciudad) LIKE LOWER(CONCAT('%', :ciudad, '%')))
+        AND
+            (:categoria IS NULL OR :categoria = '' OR LOWER(c.nombre) LIKE LOWER(CONCAT('%', :categoria, '%')))
+        AND
+            (:capacidad IS NULL OR v.capacidad >= :capacidad)
+        AND
+            (:fechaInicio IS NULL OR e.fecha >= :fechaInicio)
+        AND
+            (:fechaFin IS NULL OR e.fecha <= :fechaFin)
+        """)
     Slice<EventSummaryDTO> findEventSummariesWithFilters(
             @Param("ciudad") String ciudad,
             @Param("categoria") String categoria,

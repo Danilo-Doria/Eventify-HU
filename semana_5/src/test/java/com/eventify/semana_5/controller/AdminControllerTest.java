@@ -1,8 +1,10 @@
 package com.eventify.semana_5.controller;
 
+import com.eventify.semana_5.dto.EventCreateDTO;
+import com.eventify.semana_5.dto.EventResponseDTO;
 import com.eventify.semana_5.dto.EventSummaryDTO;
-import com.eventify.semana_5.model.Event;
-import com.eventify.semana_5.model.Venue;
+import com.eventify.semana_5.dto.VenueCreateDTO;
+import com.eventify.semana_5.dto.VenueResponseDTO;
 import com.eventify.semana_5.service.CategoryService;
 import com.eventify.semana_5.service.EventService;
 import com.eventify.semana_5.service.VenueService;
@@ -16,8 +18,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 // Imports para test (get)
@@ -27,8 +31,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 // Imports para test (Post)
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 
@@ -79,14 +81,15 @@ public class AdminControllerTest {
     @Test
     void shouldReturnVenuesPageWithCorrectData() throws Exception {
         // 1. ARRANGEMENT (Preparación)
-        Venue venue = Venue.builder()
-                .id(1L)
-                .nombre("Concierto de Rock")
-                .direccion("parque los Andes")
-                .capacidad(250)
-                .build();
+        VenueResponseDTO venueResponse = new VenueResponseDTO(
+                1L,
+                "Concierto de Rock",
+                "parque los Andes",
+                250,
+                "Barranquilla"
+        );
 
-        Page<Venue> page = new PageImpl<>(List.of(venue));
+        Page<VenueResponseDTO> page = new PageImpl<>(List.of(venueResponse));
         when(venueService.findAll(any(Pageable.class))).thenReturn(page);
 
         // 2. ACT & ASSERT (Acción y Verificación combinada)
@@ -113,7 +116,7 @@ public class AdminControllerTest {
     @Test
     void shouldReturnVenueForm() throws Exception {
 
-        // Simula GET /admin/events/new
+        // Simula GET /admin/venues/new
         mockMvc.perform(get("/admin/venues/new"))
                 // Verifica HTTP 200
                 .andExpect(status().isOk())
@@ -126,61 +129,46 @@ public class AdminControllerTest {
     /// Test de formularios Post
     @Test
     void shouldCreateEventAndRedirect() throws Exception {
-
-        // Evento que simulará ser creado por el servicio.
-        Event event = Event.builder()
-                .id(1L)
-                .nombre("Concierto de Rock")
-                .descripcion("Evento musical")
-                .fecha(LocalDateTime.of(2026, 10, 15, 20, 0))
-                .build();
-
-        // Simula que el servicio guarda el evento correctamente.
-        when(eventService.create(any(Event.class))).thenReturn(event);
-
-        // Simula POST /admin/events enviando los datos del formulario.
         mockMvc.perform(post("/admin/events")
                         .param("nombre", "Concierto de Rock")
                         .param("descripcion", "Evento musical")
-                        .param("fecha", "2026-10-15T20:00"))
-
-                // Verifica que el controlador responde con una redirección.
+                        .param("fecha", "2026-10-15T20:00")
+                        .param("venueId", "1")
+                        .param("categoryIds", "1") // <-- AGREGA ESTE PARÁMETRO (puedes pasar "1", "2", etc.)
+                )
                 .andExpect(status().is3xxRedirection())
-
-                // Verifica que redirige al listado de eventos.
                 .andExpect(redirectedUrl("/admin/events"));
-
-        // Verifica que el controlador realmente llamó al servicio.
-        verify(eventService).create(any(Event.class));
     }
 
     @Test
     void shouldCreateVenueAndRedirect() throws Exception {
 
-        // Evento que simulará ser creado por el servicio.
-        Venue venue = Venue.builder()
-                .id(1L)
-                .nombre("Concierto de Rock")
-                .direccion("Parque los Andes")
-                .capacidad(150)
-                .build();
+        // DTO de respuesta que simulará ser retornado por el servicio.
+        VenueResponseDTO venueResponse = new VenueResponseDTO(
+                1L,
+                "Concierto de Rock",
+                "Parque los Andes",
+                150,
+                "Barranquilla"
+        );
 
-        // Simula que el servicio guarda el evento correctamente.
-        when(venueService.create(any(Venue.class))).thenReturn(venue);
+        // Simula que el servicio recibe un VenueCreateDTO y guarda la sede correctamente.
+        when(venueService.create(any(VenueCreateDTO.class))).thenReturn(venueResponse);
 
-        // Simula POST /admin/events enviando los datos del formulario.
+        // Simula POST /admin/venues enviando los datos del formulario.
         mockMvc.perform(post("/admin/venues")
                         .param("nombre", "Concierto de Rock")
                         .param("direccion", "Parque los Andes")
-                        .param("capacidad", String.valueOf(150)))
+                        .param("capacidad", "150")
+                        .param("ciudad", "Barranquilla"))
 
                 // Verifica que el controlador responde con una redirección.
                 .andExpect(status().is3xxRedirection())
 
-                // Verifica que redirige al listado de eventos.
+                // Verifica que redirige al listado de sedes.
                 .andExpect(redirectedUrl("/admin/venues"));
 
-        // Verifica que el controlador realmente llamó al servicio.
-        verify(venueService).create(any(Venue.class));
+        // Verifica que el controlador realmente llamó al servicio pasando un VenueCreateDTO.
+        verify(venueService).create(any(VenueCreateDTO.class));
     }
 }

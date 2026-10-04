@@ -1,10 +1,12 @@
 package com.eventify.semana_5.controller;
 
-import com.eventify.semana_5.model.Venue;
+import com.eventify.semana_5.dto.VenueCreateDTO;
+import com.eventify.semana_5.dto.VenueResponseDTO;
 import com.eventify.semana_5.service.VenueService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
@@ -24,118 +26,46 @@ public class VenueController {
 
     private final VenueService venueService;
 
-    @Operation(
-            summary = "Registrar un lugar",
-            description = "Registra un nuevo lugar en el catálogo de Eventify"
-    )
+    @Operation(summary = "Registrar una sede/venue")
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "201",
-                    description = "Lugar creado correctamente"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "El nombre del lugar es obligatorio"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "La capacidad debe ser mayor a cero"
-            )
+            @ApiResponse(responseCode = "201", description = "Sede creada correctamente"),
+            @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos")
     })
     @PostMapping
-    public ResponseEntity<Venue> create(@RequestBody Venue venue) {
-        Venue createdVenue = venueService.create(venue);
+    public ResponseEntity<VenueResponseDTO> create(@Valid @RequestBody VenueCreateDTO dto) {
+        VenueResponseDTO createdVenue = venueService.create(dto);
 
-        // ServletUriComponentsBuilder toma la URL actual de la petición (ej. "http://localhost:8080/api/venues"),
-        // le añade el path "/{id}" y reemplaza el parámetro con el ID del nuevo objeto.
-        // Resultado de 'location': "http://localhost:8080/api/venues/1"
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(createdVenue.getId())
+                .buildAndExpand(createdVenue.id())
                 .toUri();
 
         return ResponseEntity.created(location).body(createdVenue);
     }
 
-    @Operation(
-            summary = "Consultar lugares",
-            description = "Obtiene los lugares registrados en el catálogo de Eventify mediante paginación y ordenamiento"
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Lugares obtenidos correctamente"
-            )
-    })
+    @Operation(summary = "Listar todas las sedes paginadas")
     @GetMapping
-    public ResponseEntity<Page<Venue>> findAll(
+    public ResponseEntity<Page<VenueResponseDTO>> findAll(
             @ParameterObject
-            @PageableDefault(
-                    size = 10,
-                    sort = "nombre",
-                    direction = Sort.Direction.ASC
-            )
+            @PageableDefault(size = 10, sort = "nombre", direction = Sort.Direction.ASC)
             Pageable pageable) {
 
-        return ResponseEntity.ok(venueService.findAll(pageable));
+        return ResponseEntity.ok(venueService.findAllDTO(pageable));
     }
 
-    @Operation(
-            summary = "Consultar un lugar por ID",
-            description = "Obtiene un lugar específico mediante su identificador"
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Lugar encontrado correctamente"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "El lugar no existe"
-            )
-    })
+    @Operation(summary = "Consultar una sede por ID")
     @GetMapping("/{id}")
-    public ResponseEntity<Venue> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(venueService.findById(id));
+    public ResponseEntity<VenueResponseDTO> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(venueService.findByIdDTO(id));
     }
 
-    @Operation(
-            summary = "Actualizar un lugar",
-            description = "Actualiza un lugar mediante su identificador"
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Lugar actualizado correctamente"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "El nombre del lugar es obligatorio"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "El lugar no existe"
-            )
-    })
+    @Operation(summary = "Actualizar una sede")
     @PutMapping("/{id}")
-    public ResponseEntity<Venue> update(@PathVariable Long id, @RequestBody Venue venue) {
-        return ResponseEntity.ok(venueService.update(id, venue));
+    public ResponseEntity<VenueResponseDTO> update(@PathVariable Long id, @Valid @RequestBody VenueCreateDTO dto) {
+        return ResponseEntity.ok(venueService.update(id, dto));
     }
 
-    @Operation(
-            summary = "Eliminar un lugar",
-            description = "Elimina un lugar físicamente mediante su identificador"
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "204",
-                    description = "Lugar eliminado correctamente"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "El lugar no existe"
-            )
-    })
+    @Operation(summary = "Eliminar una sede")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         venueService.delete(id);
