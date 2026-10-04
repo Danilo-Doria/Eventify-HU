@@ -157,7 +157,7 @@ public class EventServiceTest {
         // devolverá nuestro Slice simulado.
         when(eventRepository.findEventSummaries(pageable)).thenReturn(expectedSlice);
 
-        // Ejecutamos el método actual del Service: findAllSummary.
+        // Ejecutamos el metodo actual del Service: findAllSummary.
         Slice<EventSummaryDTO> result = eventService.findAllSummary(pageable);
 
         // Comprobamos que el Service devuelve el Slice esperado.
